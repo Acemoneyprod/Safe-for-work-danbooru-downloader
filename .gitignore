@@ -1,0 +1,14 @@
+# local settings / credentials
+gui_config.json
+*config*.json
+
+# downloads and logs
+danbooru_downloads/
+logs/
+
+# python
+__pycache__/
+*.pyc
+
+# scratch folders
+new credits gifs/

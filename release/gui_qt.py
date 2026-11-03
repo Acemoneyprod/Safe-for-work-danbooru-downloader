@@ -48,6 +48,7 @@ from downloader import (
 import qt_widgets
 import qt_theme
 import i18n
+import updater
 from stats_page import StatsPage
 from qt_theme import (
     COLOR_ACCENT, COLOR_ACCENT_HOVER, COLOR_BG_CARD, COLOR_BG_CARD_INNER,
@@ -788,6 +789,10 @@ class UiBridge(QtCore.QObject):
     large_failed = Signal(int)
     tag_results = Signal(str, object, object)
     multi_tag_results = Signal(list)
+    update_checked = Signal(object)
+    update_progress = Signal(int, int)
+    update_downloaded = Signal(str)
+    update_failed = Signal(str)
 
 
 
@@ -1195,6 +1200,9 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
         self._large_request_id = 0
         self._overlay = None
         self._toasts = []
+        self._update_info = None
+        self._update_busy = False
+        self._update_silent = False
 
         self.bridge = UiBridge()
         self._wire_bridge()
@@ -1221,6 +1229,8 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
         self.select_tab(0, immediate=True)
         self._init_tab_sound()
         self._init_toast_sounds()
+        self._fit_to_screen()
+        QTimer.singleShot(4200, lambda: self._check_updates(silent=True))
 
 
     def showEvent(self, ev):
@@ -1240,6 +1250,19 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
                 self._welcome_splash.start()
         except Exception:
             logging.getLogger().debug("welcome intro failed", exc_info=True)
+
+    def _fit_to_screen(self):
+        screen = QtWidgets.QApplication.primaryScreen()
+        if screen is None:
+            return
+        avail = screen.availableGeometry()
+        width = min(1720, max(1000, int(avail.width() * 0.86)))
+        height = min(1080, max(680, int(avail.height() * 0.86)))
+        width = min(width, avail.width())
+        height = min(height, avail.height())
+        self.resize(width, height)
+        self.move(avail.x() + max(0, (avail.width() - width) // 2),
+                  avail.y() + max(0, (avail.height() - height) // 2))
 
     def _dw_setup(self):
         try:
@@ -1268,6 +1291,10 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
         b.large_failed.connect(self._on_large_failed)
         b.tag_results.connect(self._on_tag_results)
         b.multi_tag_results.connect(self._on_multi_tag_results)
+        b.update_checked.connect(self._on_update_checked)
+        b.update_progress.connect(self._on_update_progress)
+        b.update_downloaded.connect(self._on_update_downloaded)
+        b.update_failed.connect(self._on_update_failed)
 
     def wire_config_callbacks(self):
         config.ON_PREVIEW_CALLBACK = self.on_image_preview_callback
@@ -1407,6 +1434,11 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
             builder(wrap)
             self.stack.addWidget(wrap)
             self.pages.append(wrap)
+
+        self._size_grip = QtWidgets.QSizeGrip(root)
+        self._size_grip.setFixedSize(16, 16)
+        self._size_grip.setStyleSheet("background: transparent;")
+        self._size_grip.raise_()
 
         self._apply_tooltips()
 
@@ -1941,9 +1973,14 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
             self.entry_strip_tags = _entry("", h=36)
 
     def _page_settings(self, wrap):
+        scroll = QtWidgets.QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QtWidgets.QFrame.NoFrame)
+        scroll.setStyleSheet(_scroll_style())
         page = QtWidgets.QWidget()
         page.setStyleSheet("background: transparent;")
-        wrap.layout_box().addWidget(page)
+        scroll.setWidget(page)
+        wrap.layout_box().addWidget(scroll)
         grid = QtWidgets.QGridLayout(page)
         grid.setContentsMargins(0, 0, 2, 0)
         grid.setSpacing(12)
@@ -2169,10 +2206,47 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
         else:
             grid.addWidget(cfgbar, 2, 0, 1, 2)
 
+        upd = Card("UPDATES", "Version and releases")
+        upd.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding,
+                          QtWidgets.QSizePolicy.Policy.Preferred)
+        self.lbl_update_version = QtWidgets.QLabel(
+            i18n.tr("Current version") + ": v" + updater.APP_VERSION)
+        self.lbl_update_version._i18n_dynamic = True
+        self.lbl_update_version.setFont(F(11))
+        self.lbl_update_version.setStyleSheet(
+            f"color: {COLOR_TEXT_WHITE};")
+        upd.body.addWidget(self.lbl_update_version)
+        self.lbl_update_status = QtWidgets.QLabel(i18n.tr("Not checked yet."))
+        self.lbl_update_status._i18n_dynamic = True
+        self.lbl_update_status.setFont(F(10))
+        self.lbl_update_status.setStyleSheet(
+            f"color: {COLOR_TEXT_MUTED};")
+        upd.body.addWidget(self.lbl_update_status)
+        urow = QtWidgets.QWidget()
+        urow.setStyleSheet("background: transparent;")
+        uh = QtWidgets.QHBoxLayout(urow)
+        uh.setContentsMargins(0, 0, 0, 0)
+        uh.setSpacing(8)
+        self.btn_update_check = HoverButton(
+            "Check for updates", radius=8, font=B(10), height=36)
+        self.btn_update_check.clicked.connect(
+            lambda: self._check_updates(silent=False))
+        uh.addWidget(self.btn_update_check)
+        self.btn_update_install = HoverButton(
+            "Update now", fill=COLOR_ACCENT, hover=COLOR_ACCENT_HOVER,
+            text_color=COLOR_BG_WINDOW, radius=8, font=B(11), height=36)
+        self.btn_update_install.clicked.connect(self._download_update)
+        self.btn_update_install.hide()
+        uh.addWidget(self.btn_update_install)
+        uh.addStretch(1)
+        upd.body.addWidget(urow)
+        grid.addWidget(upd, 3, 0, 1, 2)
+
         grid.setRowStretch(0, 0)
         grid.setRowStretch(1, 0)
         grid.setRowStretch(2, 0)
-        grid.setRowStretch(3, 1)
+        grid.setRowStretch(3, 0)
+        grid.setRowStretch(4, 1)
 
         self._config_path = CONFIG_FILE
         self.refresh_config_profiles()
@@ -2618,6 +2692,11 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
         self._update_username_privacy()
         self._fit_credit_buttons()
         try:
+            self.lbl_update_version.setText(
+                i18n.tr("Current version") + ": v" + updater.APP_VERSION)
+        except Exception:
+            pass
+        try:
             self.stats_page.refresh(force=True)
         except Exception:
             pass
@@ -2688,6 +2767,161 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
             self.show_toast(
                 "Language",
                 "Restart the app to apply the new language.", kind="info")
+
+    def _set_update_status(self, text, color):
+        try:
+            self.lbl_update_status.setText(text)
+            self.lbl_update_status.setStyleSheet(
+                f"color: {color}; background: transparent;")
+        except Exception:
+            pass
+
+    def _check_updates(self, silent=False):
+        if self._update_busy:
+            return
+        self._update_busy = True
+        self._update_silent = silent
+        try:
+            self.btn_update_check.setEnabled(False)
+            self.btn_update_install.setEnabled(False)
+            self._set_update_status(i18n.tr("Checking..."),
+                                    COLOR_TEXT_MUTED)
+        except Exception:
+            pass
+
+        def worker():
+            try:
+                info = updater.check_latest()
+            except Exception as exc:
+                info = {"error": str(exc)}
+            try:
+                self.bridge.update_checked.emit(info)
+            except Exception:
+                pass
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _on_update_checked(self, info):
+        self._update_busy = False
+        silent = self._update_silent
+        try:
+            self.btn_update_check.setEnabled(True)
+        except Exception:
+            pass
+        if not info or info.get("error"):
+            self._update_info = None
+            try:
+                self.btn_update_install.hide()
+            except Exception:
+                pass
+            self._set_update_status(
+                i18n.tr("Could not check for updates."), COLOR_TEXT_MUTED)
+            if not silent:
+                self.show_toast(i18n.tr("Updates"),
+                                i18n.tr("Could not check for updates."),
+                                kind="warning")
+            return
+        latest = info.get("version") or ""
+        if updater.is_newer(latest):
+            self._update_info = info
+            try:
+                self.btn_update_install.show()
+                self.btn_update_install.setEnabled(True)
+            except Exception:
+                pass
+            try:
+                status = i18n.tr("Version %s is available.") % latest
+            except Exception:
+                status = "Version %s is available." % latest
+            self._set_update_status(status, COLOR_WARN)
+            try:
+                message = i18n.tr(
+                    "%s is ready. Open Settings to update.") % latest
+            except Exception:
+                message = "%s is ready. Open Settings to update." % latest
+            self.show_toast(i18n.tr("Update available"), message,
+                            kind="info", duration=8000)
+        else:
+            self._update_info = None
+            try:
+                self.btn_update_install.hide()
+            except Exception:
+                pass
+            self._set_update_status(i18n.tr("You're up to date."),
+                                    COLOR_SUCCESS)
+            if not silent:
+                self.show_toast(i18n.tr("Updates"),
+                                i18n.tr("You're up to date."),
+                                kind="success")
+
+    def _download_update(self):
+        info = self._update_info
+        if not info:
+            return
+        url = info.get("installer")
+        if not url:
+            webbrowser.open(info.get("page") or updater.RELEASES_URL)
+            return
+        if self._update_busy:
+            return
+        self._update_busy = True
+        try:
+            self.btn_update_check.setEnabled(False)
+            self.btn_update_install.setEnabled(False)
+        except Exception:
+            pass
+        self._set_update_status(i18n.tr("Downloading update..."),
+                                COLOR_TEXT_MUTED)
+
+        def worker():
+            try:
+                path = updater.download_installer(
+                    url,
+                    progress=lambda done, total:
+                    self.bridge.update_progress.emit(done, total))
+                self.bridge.update_downloaded.emit(path)
+            except Exception as exc:
+                self.bridge.update_failed.emit(str(exc))
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _on_update_progress(self, done, total):
+        text = i18n.tr("Downloading update...")
+        if total:
+            text += " %d%%" % int(done * 100 / total)
+        self._set_update_status(text, COLOR_TEXT_MUTED)
+
+    def _on_update_downloaded(self, path):
+        self._set_update_status(i18n.tr("Starting installer..."),
+                                COLOR_SUCCESS)
+        QTimer.singleShot(500, lambda: self._run_update_installer(path))
+
+    def _run_update_installer(self, path):
+        try:
+            updater.launch_installer(path)
+        except Exception as exc:
+            self._update_busy = False
+            try:
+                self.btn_update_check.setEnabled(True)
+                self.btn_update_install.setEnabled(True)
+            except Exception:
+                pass
+            self._set_update_status(i18n.tr("Update failed."),
+                                    COLOR_DANGER)
+            self.show_toast(i18n.tr("Update failed"), str(exc),
+                            kind="error")
+            return
+        QTimer.singleShot(400, QtWidgets.QApplication.quit)
+
+    def _on_update_failed(self, error):
+        self._update_busy = False
+        try:
+            self.btn_update_check.setEnabled(True)
+            self.btn_update_install.setEnabled(True)
+        except Exception:
+            pass
+        self._set_update_status(i18n.tr("Update failed."), COLOR_DANGER)
+        self.show_toast(i18n.tr("Update failed"), error, kind="error")
 
     def _confirm_uninstall(self):
         unins = os.path.join(BASE_DIR, "unins000.exe")
@@ -3941,6 +4175,12 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
             self._layout_toasts(animate=False)
         for page in (self.pages if hasattr(self, "pages") else []):
             page.updateGeometry()
+        try:
+            self._size_grip.move(self._root_frame.width() - 22,
+                                 self._root_frame.height() - 22)
+            self._size_grip.raise_()
+        except Exception:
+            pass
 
     def closeEvent(self, ev):
         self._closing = True

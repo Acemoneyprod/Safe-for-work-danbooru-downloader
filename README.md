@@ -43,7 +43,7 @@ toasts keep you posted when something needs your attention.
 > There's no switch for this.
 
 <p align="center">
-  <img src="screenshots/10-toast.png" width="100%" alt="Toast notification">
+  <img src="screenshots/8-toast.png" width="100%" alt="Toast notification">
 </p>
 
 You can filter by minimum size and score, set how many posts to fetch per
@@ -117,7 +117,7 @@ Romanian, Turkish, Indonesian and Vietnamese. Switching language applies
 immediately, no restart.
 
 <p align="center">
-  <img src="screenshots/11-language-dialog.png" width="100%" alt="Language dialog">
+  <img src="screenshots/9-language-dialog.png" width="100%" alt="Language dialog">
 </p>
 
 You can also change worker count, rate limit and timeout, choose which tag

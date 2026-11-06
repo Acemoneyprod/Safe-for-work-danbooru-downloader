@@ -13,15 +13,6 @@
 
 </div>
 
-I wanted a Danbooru downloader that didn't look like a form with a progress
-bar glued to it, so I built this. It's a Windows desktop app made with
-PySide6, and it only ever downloads SFW posts. That part isn't a setting you
-can turn off.
-
-It does the normal downloader stuff well, and then there's a preview browser,
-tag tools, statistics, 23 languages and a few things that are just there
-because I thought they'd be fun.
-
 > [!TIP]
 > Don't want to run Python? Sturdy installer and portable builds live on the
 > [Releases page](https://github.com/Acemoneyprod/Safe-for-work-danbooru-downloader/releases/latest).

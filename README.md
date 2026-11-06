@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="screenshots/00-welcome.gif" alt="Startup intro" width="600">
+<img src="Src/screenshots/00-welcome.gif" alt="Startup intro" width="600">
 
 # SFW Danbooru Downloader
 
@@ -34,7 +34,7 @@ Search works with Danbooru's usual tag syntax. Tags turn into chips, and
 toasts keep you posted when something needs your attention.
 
 <p align="center">
-  <img src="screenshots/01-downloader.png" width="100%" alt="Downloader page">
+  <img src="Src/screenshots/01-downloader.png" width="100%" alt="Downloader page">
 </p>
 
 > [!IMPORTANT]
@@ -43,7 +43,7 @@ toasts keep you posted when something needs your attention.
 > There's no switch for this.
 
 <p align="center">
-  <img src="screenshots/8-toast.png" width="100%" alt="Toast notification">
+  <img src="Src/screenshots/08-toast.png" width="100%" alt="Toast notification">
 </p>
 
 You can filter by minimum size and score, set how many posts to fetch per
@@ -68,7 +68,7 @@ You can look before you download. Posts show up as a thumbnail grid, and the
 next pages are fetched in the background so paging doesn't feel like waiting.
 
 <p align="center">
-  <img src="screenshots/02-preview.png" width="100%" alt="Preview gallery">
+  <img src="Src/screenshots/02-preview.png" width="100%" alt="Preview gallery">
 </p>
 
 Click a post to see it bigger, along with its score, rating, resolution,
@@ -78,7 +78,7 @@ select the whole page, clear the selection, or download only what you picked.
 there's a link to open the post on Danbooru if you want to see it there.
 
 <p align="center">
-  <img src="screenshots/03-large-preview.png" width="100%" alt="Large preview">
+  <img src="Src/screenshots/03-large-preview.png" width="100%" alt="Large preview">
 </p>
 
 ## Console
@@ -88,7 +88,7 @@ There's also a small preview of the latest downloaded file with its name,
 resolution and size.
 
 <p align="center">
-  <img src="screenshots/04-console.png" width="100%" alt="Console page">
+  <img src="Src/screenshots/04-console.png" width="100%" alt="Console page">
 </p>
 
 ## Tag Tools
@@ -98,7 +98,7 @@ description, a typo suggestion if you made one, and autocomplete matches.
 Click a suggestion to copy it. There's a popular tags list too.
 
 <p align="center">
-  <img src="screenshots/05-tag-tools.png" width="100%" alt="Tag tools">
+  <img src="Src/screenshots/05-tag-tools.png" width="100%" alt="Tag tools">
 </p>
 
 The bottom part is for people who keep `.txt` files next to their downloads:
@@ -117,7 +117,7 @@ Romanian, Turkish, Indonesian and Vietnamese. Switching language applies
 immediately, no restart.
 
 <p align="center">
-  <img src="screenshots/9-language-dialog.png" width="100%" alt="Language dialog">
+  <img src="Src/screenshots/09-language-dialog.png" width="100%" alt="Language dialog">
 </p>
 
 You can also change worker count, rate limit and timeout, choose which tag
@@ -126,7 +126,7 @@ categories go into filenames and `.txt` files, and toggle the allowed formats
 you like keeping separate setups.
 
 <p align="center">
-  <img src="screenshots/06-settings.png" width="100%" alt="Settings page">
+  <img src="Src/screenshots/06-settings.png" width="100%" alt="Settings page">
 </p>
 
 In the installed version there are buttons to open the app folder and
@@ -142,7 +142,7 @@ storage details like average size, the biggest file and free disk space.
 It refreshes when you open the tab and after a download finishes.
 
 <p align="center">
-  <img src="screenshots/07-statistics.png" width="100%" alt="Statistics page">
+  <img src="Src/screenshots/07-statistics.png" width="100%" alt="Statistics page">
 </p>
 
 ## Running It

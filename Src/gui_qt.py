@@ -3818,7 +3818,7 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
             self.lbl_preview_status.setText(status)
             self._status_color(COLOR_TEXT_MUTED)
         else:
-            self.lbl_preview_status.setText("No posts found.")
+            self.lbl_preview_status.setText(note or "No posts found.")
             self._clear_grid("No posts found.\nTry different tags.")
         if self._preview_next_raw is not None:
             self._kick_prefetch(self._preview_next_raw)

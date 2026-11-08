@@ -328,6 +328,8 @@ def _query_tokens(tags, allowed_prefixes, rating_tag):
         if ":" in token:
             if low.startswith(allowed_prefixes):
                 out.append(token)
+            elif low == "order:score":
+                out.append("sort:score")
             continue
         out.append(token)
     out.append(rating_tag)

@@ -454,6 +454,9 @@ def get_post_tags_for_txt(post):
     if config.INCLUDE_META_TAGS:
         tag_types["meta"] = post.get("tag_string_meta", "").split()
     
+    if not any(tag_types.values()) and post.get("tag_string"):
+        tag_types["general"] = post.get("tag_string", "").split()
+    
     return tag_types
 
 def calculate_file_hash(filepath):

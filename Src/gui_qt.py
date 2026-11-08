@@ -796,6 +796,7 @@ class UiBridge(QtCore.QObject):
     update_downloaded = Signal(str)
     update_failed = Signal(str)
     gelbooru_test = Signal(bool, str)
+    source_failed = Signal(str, str, str)
 
 
 
@@ -1313,10 +1314,12 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
         b.update_downloaded.connect(self._on_update_downloaded)
         b.update_failed.connect(self._on_update_failed)
         b.gelbooru_test.connect(self._on_gelbooru_test)
+        b.source_failed.connect(self._on_source_failed)
 
     def wire_config_callbacks(self):
         config.ON_PREVIEW_CALLBACK = self.on_image_preview_callback
         config.ON_PROGRESS_CALLBACK = self.on_progress
+        config.ON_SOURCE_FAILURE_CALLBACK = self.on_source_failure
 
 
     def _enable_drag(self, widget: QtWidgets.QWidget):
@@ -1324,6 +1327,11 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
         widget._is_drag_zone = True
 
     def eventFilter(self, obj, ev):
+        if hasattr(self, "preview_scroll") and \
+                obj is self.preview_scroll.viewport() and \
+                ev.type() == QtCore.QEvent.Resize:
+            self._resize_grid_holder()
+            return False
         if getattr(obj, "_is_drag_zone", False):
             if ev.type() == QtCore.QEvent.MouseButtonPress and \
                     ev.button() in (Qt.LeftButton, Qt.RightButton):
@@ -1703,7 +1711,9 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
     def _page_preview(self, wrap):
         page = QtWidgets.QWidget()
         page.setStyleSheet("background: transparent;")
-        wrap.layout_box().addWidget(page)
+        page.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding,
+                           QtWidgets.QSizePolicy.Policy.Expanding)
+        wrap.layout_box().addWidget(page, 1)
         col = QtWidgets.QVBoxLayout(page)
         col.setContentsMargins(0, 0, 0, 0)
         col.setSpacing(12)
@@ -1756,7 +1766,10 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
         nh.addWidget(self.lbl_preview_status, 1)
         search_card.body.addWidget(nav)
 
-        grid_card = Card("Posts", "Click a post to enlarge · tick to select")
+        grid_card = Card("Posts", "Click a post to enlarge · tick to select",
+                         fill=True)
+        grid_card.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding,
+                                QtWidgets.QSizePolicy.Policy.Expanding)
         col.addWidget(grid_card, 1)
         self.preview_scroll = QtWidgets.QScrollArea()
         self.preview_scroll.setWidgetResizable(True)
@@ -1764,21 +1777,24 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
         self.preview_scroll.setStyleSheet(_scroll_style())
         self._grid_holder = QtWidgets.QWidget()
         self._grid_holder.setStyleSheet("background: transparent;")
-        self.preview_grid = QtWidgets.QGridLayout(self._grid_holder)
-        self.preview_grid.setContentsMargins(4, 4, 8, 8)
-        self.preview_grid.setSpacing(12)
-        self.preview_grid.setAlignment(Qt.AlignTop)
-        for cx in range(5):
-            self.preview_grid.setColumnStretch(cx, 1)
-        self.preview_scroll.setWidget(self._grid_holder)
-        grid_card.body.addWidget(self.preview_scroll, 1)
+        holder_layout = QtWidgets.QVBoxLayout(self._grid_holder)
+        holder_layout.setContentsMargins(4, 4, 8, 8)
+        holder_layout.setSpacing(0)
         self.preview_empty_label = QtWidgets.QLabel(
             "No posts loaded yet.\nEnter tags and press SEARCH.")
         self.preview_empty_label.setAlignment(Qt.AlignCenter)
         self.preview_empty_label.setFont(F(12))
         self.preview_empty_label.setWordWrap(True)
         self.preview_empty_label.setStyleSheet(f"color: {COLOR_TEXT_INACTIVE};")
-        self.preview_grid.addWidget(self.preview_empty_label, 0, 0, 1, 5)
+        holder_layout.addWidget(self.preview_empty_label, 0,
+                                Qt.AlignHCenter | Qt.AlignTop)
+        self._cards_holder = QtWidgets.QWidget()
+        self._cards_holder.setStyleSheet("background: transparent;")
+        self.preview_grid = FlowLayout(self._cards_holder, spacing=12)
+        holder_layout.addWidget(self._cards_holder, 1)
+        self.preview_scroll.setWidget(self._grid_holder)
+        self.preview_scroll.viewport().installEventFilter(self)
+        grid_card.body.addWidget(self.preview_scroll, 1)
 
         prow = QtWidgets.QFrame()
         prow.setStyleSheet("background: transparent;")
@@ -3467,6 +3483,34 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
         if not self._closing:
             self.bridge.progress.emit(total_downloaded, total_queue)
 
+    def on_source_failure(self, key, kind, message):
+        if not self._closing:
+            self.bridge.source_failed.emit(str(key), str(kind), str(message))
+
+    def _on_source_failed(self, key, kind, message):
+        switch = getattr(self, "source_switches", {}).get(key)
+        if switch is None or not switch.isChecked():
+            return
+        if kind == "rate":
+            self.show_toast(
+                sites.site_name(key),
+                "Rate limited. Try again later.",
+                kind="warning")
+            return
+        switch.setChecked(False)
+        try:
+            config.SOURCES[key] = False
+        except Exception:
+            pass
+        self._update_source_statuses()
+        if kind == "auth":
+            text = "Needs a valid API key. Turned it off."
+        elif kind == "down":
+            text = "Is unreachable. Turned it off."
+        else:
+            text = "Failed. Turned it off."
+        self.show_toast(sites.site_name(key), text, kind="warning")
+
     def on_image_preview_callback(self, filepath):
         if not self._closing:
             self.bridge.live_preview.emit(filepath)
@@ -3887,9 +3931,8 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
         while self.preview_grid.count():
             item = self.preview_grid.takeAt(0)
             w = item.widget() if item else None
-            if w is not None and w is not self.preview_empty_label:
+            if w is not None:
                 w.deleteLater()
-        self.preview_empty_label.hide()
         self._preview_cards.clear()
         self._preview_posts = []
 
@@ -3898,7 +3941,11 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
         if message is not None:
             self.preview_empty_label.setText(message)
             self.preview_empty_label.show()
-            self.preview_grid.addWidget(self.preview_empty_label, 0, 0, 1, 5)
+            self._cards_holder.hide()
+        else:
+            self.preview_empty_label.hide()
+            self._cards_holder.show()
+        self._resize_grid_holder()
 
     def _populate_grid(self, posts):
         self._grid_clear_widgets()
@@ -3906,20 +3953,32 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
         if not self._preview_posts:
             self.preview_empty_label.setText("No posts found.")
             self.preview_empty_label.show()
-            self.preview_grid.addWidget(self.preview_empty_label, 0, 0, 1, 5)
+            self._cards_holder.hide()
+            self._resize_grid_holder()
             return
-        for index, post in enumerate(posts):
-            row, colx = divmod(index, 5)
+        self.preview_empty_label.hide()
+        self._cards_holder.show()
+        for post in posts:
             card = PreviewPostCard(post)
             card.open_requested.connect(self._open_overlay)
             card.toggle_requested.connect(self.toggle_preview_selection)
-            self.preview_grid.addWidget(card, row, colx)
+            self.preview_grid.addWidget(card)
             key = post_key(post)
             self._preview_cards[key] = card
             if key in self._selected_posts:
                 card.set_selected(True)
             self._load_thumbnail(post)
-        self._grid_holder.adjustSize()
+        self._resize_grid_holder()
+
+    def _resize_grid_holder(self):
+        if not hasattr(self, "preview_grid") or not hasattr(self, "_cards_holder"):
+            return
+        width = self._cards_holder.width()
+        if width <= 1:
+            width = max(1, self.preview_scroll.viewport().width() - 12)
+        height = self.preview_grid.heightForWidth(width)
+        self._cards_holder.setMinimumHeight(max(0, height))
+        self._grid_holder.updateGeometry()
 
     def _load_thumbnail(self, post):
         key = post_key(post)

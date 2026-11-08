@@ -733,6 +733,37 @@ def test_gelbooru(api_key, user_id):
     return True, "Gelbooru API responded, but returned no posts."
 
 
+def _failure_kind(exc):
+    status = getattr(getattr(exc, "response", None), "status_code", None)
+    if status in (401, 403):
+        return "auth"
+    if status == 429:
+        return "rate"
+    if status and status >= 500:
+        return "down"
+    name = type(exc).__name__.lower()
+    text = str(exc).lower()
+    if "api key" in text or "api-key" in text or "credentials" in text \
+            or "unauthorized" in text or "rejected" in text:
+        return "auth"
+    if "connection" in name or "timeout" in name or "resolve" in name:
+        return "down"
+    if "connection" in text or "timed out" in text or "timeout" in text:
+        return "down"
+    return "error"
+
+
+def _notify_source_failure(key, kind, message):
+    import downloader
+    callback = getattr(downloader.config, "ON_SOURCE_FAILURE_CALLBACK", None)
+    if callback is None:
+        return
+    try:
+        callback(key, kind, message)
+    except Exception:
+        pass
+
+
 def _short_error(exc):
     status = getattr(getattr(exc, "response", None), "status_code", None)
     if status:
@@ -884,8 +915,9 @@ def _fetch_combined_uncached(tags, limit, page, session, reset, keys):
             except Exception as exc:
                 raw_counts[key] = 0
                 results[key] = []
-                notes.append(f"{SOURCE_INFO[key]['name']}: "
-                             f"{_short_error(exc)}")
+                message = _short_error(exc)
+                notes.append(f"{SOURCE_INFO[key]['name']}: {message}")
+                _notify_source_failure(key, _failure_kind(exc), message)
 
     if ok_count == 0:
         raise RuntimeError("; ".join(notes) or "All sources failed.")

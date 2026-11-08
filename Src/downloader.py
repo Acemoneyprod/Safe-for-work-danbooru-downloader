@@ -316,6 +316,7 @@ class Config:
     ON_PREVIEW_CALLBACK = None
     ON_PROGRESS_CALLBACK = None
     ON_STATUS_CALLBACK = None
+    ON_SOURCE_FAILURE_CALLBACK = None
 
 config = Config()
 

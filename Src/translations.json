@@ -355,7 +355,11 @@
   "TESTING...": "テスト中...",
   "Enter the API key and user ID first.": "最初に API キーとユーザー ID を入力します。",
   "How to get Gelbooru credentials": "Gelbooru 認証情報を取得する方法",
-  "Enter Gelbooru user ID (number)...": "Gelbooru ユーザー ID (番号) を入力してください..."
+  "Enter Gelbooru user ID (number)...": "Gelbooru ユーザー ID (番号) を入力してください...",
+  "Rate limited. Try again later.": "レート制限あり。後でもう一度試してください。",
+  "Needs a valid API key. Turned it off.": "有効な API キーが必要です。オフにしました。",
+  "Is unreachable. Turned it off.": "到達不能です。オフにしました。",
+  "Failed. Turned it off.": "失敗した。オフにしました。"
  },
  "zh": {
   "1. SEARCH TAGS TO TRIGGERS": "1. 搜索标签触发",
@@ -713,7 +717,11 @@
   "TESTING...": "测试...",
   "Enter the API key and user ID first.": "首先输入 API 密钥和用户 ID。",
   "How to get Gelbooru credentials": "如何获得 Gelboru 凭证",
-  "Enter Gelbooru user ID (number)...": "输入 Gelboru 用户 ID（号码）..."
+  "Enter Gelbooru user ID (number)...": "输入 Gelboru 用户 ID（号码）...",
+  "Rate limited. Try again later.": "速率有限。稍后再试。",
+  "Needs a valid API key. Turned it off.": "需要有效的 API 密钥。把它关掉了。",
+  "Is unreachable. Turned it off.": "是无法到达的。把它关掉了。",
+  "Failed. Turned it off.": "失败的。把它关掉了。"
  },
  "ko": {
   "1. SEARCH TAGS TO TRIGGERS": "1. 트리거할 태그 검색",
@@ -1071,7 +1079,11 @@
   "TESTING...": "테스트 중...",
   "Enter the API key and user ID first.": "API 키와 사용자 ID를 먼저 입력하세요.",
   "How to get Gelbooru credentials": "Gelbooru 자격 증명을 얻는 방법",
-  "Enter Gelbooru user ID (number)...": "Gelbooru 사용자 ID(번호)를 입력하세요..."
+  "Enter Gelbooru user ID (number)...": "Gelbooru 사용자 ID(번호)를 입력하세요...",
+  "Rate limited. Try again later.": "요금이 제한되어 있습니다. 나중에 다시 시도하세요.",
+  "Needs a valid API key. Turned it off.": "유효한 API 키가 필요합니다. 그것을 껐습니다.",
+  "Is unreachable. Turned it off.": "연결할 수 없습니다. 그것을 껐습니다.",
+  "Failed. Turned it off.": "실패한. 그것을 껐습니다."
  },
  "pl": {
   "1. SEARCH TAGS TO TRIGGERS": "1. WYSZUKAJ TAGI DO WYZWALACZY",
@@ -1429,7 +1441,11 @@
   "TESTING...": "TESTOWANIE...",
   "Enter the API key and user ID first.": "Najpierw wprowadź klucz API i identyfikator użytkownika.",
   "How to get Gelbooru credentials": "Jak zdobyć referencje Gelbooru",
-  "Enter Gelbooru user ID (number)...": "Wprowadź identyfikator użytkownika Gelbooru (numer)..."
+  "Enter Gelbooru user ID (number)...": "Wprowadź identyfikator użytkownika Gelbooru (numer)...",
+  "Rate limited. Try again later.": "Cena ograniczona. Spróbuj ponownie później.",
+  "Needs a valid API key. Turned it off.": "Wymaga prawidłowego klucza API. Wyłączyłem to.",
+  "Is unreachable. Turned it off.": "Jest nieosiągalny. Wyłączyłem to.",
+  "Failed. Turned it off.": "Przegrany. Wyłączyłem to."
  },
  "ru": {
   "1. SEARCH TAGS TO TRIGGERS": "1. ПОИСК ТЕГОВ ПО ТРИГГЕРАМ",
@@ -1787,7 +1803,11 @@
   "TESTING...": "ТЕСТИРОВАНИЕ...",
   "Enter the API key and user ID first.": "Сначала введите ключ API и идентификатор пользователя.",
   "How to get Gelbooru credentials": "Как получить учетные данные Gelbooru",
-  "Enter Gelbooru user ID (number)...": "Введите идентификатор пользователя Gelbooru (номер)..."
+  "Enter Gelbooru user ID (number)...": "Введите идентификатор пользователя Gelbooru (номер)...",
+  "Rate limited. Try again later.": "Ставка ограничена. Повторите попытку позже.",
+  "Needs a valid API key. Turned it off.": "Требуется действительный ключ API. Выключил.",
+  "Is unreachable. Turned it off.": "Является недостижимым. Выключил.",
+  "Failed. Turned it off.": "Неуспешный. Выключил."
  },
  "uk": {
   "1. SEARCH TAGS TO TRIGGERS": "1. ПОШУК ТЕГІВ ДО ТРИГЕРІВ",
@@ -2145,7 +2165,11 @@
   "TESTING...": "ТЕСТУВАННЯ...",
   "Enter the API key and user ID first.": "Спочатку введіть ключ API та ідентифікатор користувача.",
   "How to get Gelbooru credentials": "Як отримати облікові дані Gelbooru",
-  "Enter Gelbooru user ID (number)...": "Введіть ідентифікатор користувача Gelbooru (номер)..."
+  "Enter Gelbooru user ID (number)...": "Введіть ідентифікатор користувача Gelbooru (номер)...",
+  "Rate limited. Try again later.": "Тариф обмежений. Повторіть спробу пізніше.",
+  "Needs a valid API key. Turned it off.": "Потрібен дійсний ключ API. Вимкнув його.",
+  "Is unreachable. Turned it off.": "Недосяжний. Вимкнув його.",
+  "Failed. Turned it off.": "Не вдалося. Вимкнув його."
  },
  "de": {
   "1. SEARCH TAGS TO TRIGGERS": "1. Suchen Sie nach Tags nach Auslösern",
@@ -2503,7 +2527,11 @@
   "TESTING...": "TESTEN...",
   "Enter the API key and user ID first.": "Geben Sie zuerst den API-Schlüssel und die Benutzer-ID ein.",
   "How to get Gelbooru credentials": "So erhalten Sie Gelbooru-Anmeldeinformationen",
-  "Enter Gelbooru user ID (number)...": "Geben Sie die Gelbooru-Benutzer-ID (Nummer) ein..."
+  "Enter Gelbooru user ID (number)...": "Geben Sie die Gelbooru-Benutzer-ID (Nummer) ein...",
+  "Rate limited. Try again later.": "Preis begrenzt. Versuchen Sie es später noch einmal.",
+  "Needs a valid API key. Turned it off.": "Benötigt einen gültigen API-Schlüssel. Habe es ausgeschaltet.",
+  "Is unreachable. Turned it off.": "Ist unerreichbar. Habe es ausgeschaltet.",
+  "Failed. Turned it off.": "Fehlgeschlagen. Habe es ausgeschaltet."
  },
  "fr": {
   "1. SEARCH TAGS TO TRIGGERS": "1. RECHERCHER DES TAGS AUX DÉCLENCHEURS",
@@ -2861,7 +2889,11 @@
   "TESTING...": "ESSAI...",
   "Enter the API key and user ID first.": "Entrez d'abord la clé API et l'ID utilisateur.",
   "How to get Gelbooru credentials": "Comment obtenir les informations d'identification Gelbooru",
-  "Enter Gelbooru user ID (number)...": "Entrez l'ID utilisateur (numéro) Gelbooru..."
+  "Enter Gelbooru user ID (number)...": "Entrez l'ID utilisateur (numéro) Gelbooru...",
+  "Rate limited. Try again later.": "Tarif limité. Réessayez plus tard.",
+  "Needs a valid API key. Turned it off.": "Nécessite une clé API valide. Je l'ai éteint.",
+  "Is unreachable. Turned it off.": "Est inaccessible. Je l'ai éteint.",
+  "Failed. Turned it off.": "Échoué. Je l'ai éteint."
  },
  "es": {
   "1. SEARCH TAGS TO TRIGGERS": "1. BUSCAR ETIQUETAS PARA DISPARADORES",
@@ -3219,7 +3251,11 @@
   "TESTING...": "PRUEBAS...",
   "Enter the API key and user ID first.": "Ingrese primero la clave API y el ID de usuario.",
   "How to get Gelbooru credentials": "Cómo obtener credenciales de Gelbooru",
-  "Enter Gelbooru user ID (number)...": "Ingrese el ID de usuario de Gelbooru (número)..."
+  "Enter Gelbooru user ID (number)...": "Ingrese el ID de usuario de Gelbooru (número)...",
+  "Rate limited. Try again later.": "Tarifa limitada. Vuelve a intentarlo más tarde.",
+  "Needs a valid API key. Turned it off.": "Necesita una clave API válida. Lo apagué.",
+  "Is unreachable. Turned it off.": "Es inalcanzable. Lo apagué.",
+  "Failed. Turned it off.": "Fallido. Lo apagué."
  },
  "pt": {
   "1. SEARCH TAGS TO TRIGGERS": "1. PESQUISE TAGS PARA GATILHOS",
@@ -3577,7 +3613,11 @@
   "TESTING...": "TESTANDO...",
   "Enter the API key and user ID first.": "Insira primeiro a chave API e o ID do usuário.",
   "How to get Gelbooru credentials": "Como obter credenciais Gelbooru",
-  "Enter Gelbooru user ID (number)...": "Digite o ID do usuário Gelbooru (número)..."
+  "Enter Gelbooru user ID (number)...": "Digite o ID do usuário Gelbooru (número)...",
+  "Rate limited. Try again later.": "Taxa limitada. Tente novamente mais tarde.",
+  "Needs a valid API key. Turned it off.": "Precisa de uma chave de API válida. Desliguei.",
+  "Is unreachable. Turned it off.": "Está inacessível. Desliguei.",
+  "Failed. Turned it off.": "Fracassado. Desliguei."
  },
  "it": {
   "1. SEARCH TAGS TO TRIGGERS": "1. CERCA TAG PER TRIGGER",
@@ -3935,7 +3975,11 @@
   "TESTING...": "TEST...",
   "Enter the API key and user ID first.": "Inserisci prima la chiave API e l'ID utente.",
   "How to get Gelbooru credentials": "Come ottenere le credenziali Gelbooru",
-  "Enter Gelbooru user ID (number)...": "Inserisci l'ID utente Gelbooru (numero)..."
+  "Enter Gelbooru user ID (number)...": "Inserisci l'ID utente Gelbooru (numero)...",
+  "Rate limited. Try again later.": "Tariffa limitata. Riprova più tardi.",
+  "Needs a valid API key. Turned it off.": "Richiede una chiave API valida. Spento.",
+  "Is unreachable. Turned it off.": "È irraggiungibile. Spento.",
+  "Failed. Turned it off.": "Fallito. Spento."
  },
  "nl": {
   "1. SEARCH TAGS TO TRIGGERS": "1. ZOEK TAGS NAAR TRIGGERS",
@@ -4293,7 +4337,11 @@
   "TESTING...": "TESTEN...",
   "Enter the API key and user ID first.": "Voer eerst de API-sleutel en gebruikers-ID in.",
   "How to get Gelbooru credentials": "Hoe u Gelbooru-inloggegevens kunt verkrijgen",
-  "Enter Gelbooru user ID (number)...": "Voer Gelbooru-gebruikers-ID (nummer) in..."
+  "Enter Gelbooru user ID (number)...": "Voer Gelbooru-gebruikers-ID (nummer) in...",
+  "Rate limited. Try again later.": "Tarief beperkt. Probeer het later opnieuw.",
+  "Needs a valid API key. Turned it off.": "Vereist een geldige API-sleutel. Ik heb het uitgeschakeld.",
+  "Is unreachable. Turned it off.": "Is onbereikbaar. Ik heb het uitgeschakeld.",
+  "Failed. Turned it off.": "Mislukt. Ik heb het uitgeschakeld."
  },
  "sv": {
   "1. SEARCH TAGS TO TRIGGERS": "1. SÖK TAGGAR TILL TRIGGERS",
@@ -4651,7 +4699,11 @@
   "TESTING...": "TESTNING...",
   "Enter the API key and user ID first.": "Ange API-nyckeln och användar-ID först.",
   "How to get Gelbooru credentials": "Hur man får Gelbooru-uppgifter",
-  "Enter Gelbooru user ID (number)...": "Ange Gelbooru användar-ID (nummer)..."
+  "Enter Gelbooru user ID (number)...": "Ange Gelbooru användar-ID (nummer)...",
+  "Rate limited. Try again later.": "Begränsat pris. Försök igen senare.",
+  "Needs a valid API key. Turned it off.": "Behöver en giltig API-nyckel. Stängde av den.",
+  "Is unreachable. Turned it off.": "Är otillgänglig. Stängde av den.",
+  "Failed. Turned it off.": "Misslyckades. Stängde av den."
  },
  "no": {
   "1. SEARCH TAGS TO TRIGGERS": "1. SØK TAGGER TIL TRIGGERE",
@@ -5009,7 +5061,11 @@
   "TESTING...": "TESTER...",
   "Enter the API key and user ID first.": "Skriv inn API-nøkkelen og bruker-IDen først.",
   "How to get Gelbooru credentials": "Hvordan få Gelbooru-legitimasjon",
-  "Enter Gelbooru user ID (number)...": "Skriv inn Gelbooru bruker-ID (nummer)..."
+  "Enter Gelbooru user ID (number)...": "Skriv inn Gelbooru bruker-ID (nummer)...",
+  "Rate limited. Try again later.": "Begrenset pris. Prøv igjen senere.",
+  "Needs a valid API key. Turned it off.": "Trenger en gyldig API-nøkkel. Slått den av.",
+  "Is unreachable. Turned it off.": "Er uoppnåelig. Slått den av.",
+  "Failed. Turned it off.": "Mislyktes. Slått den av."
  },
  "da": {
   "1. SEARCH TAGS TO TRIGGERS": "1. SØG TAGS TIL TRIGGERE",
@@ -5367,7 +5423,11 @@
   "TESTING...": "TESTER...",
   "Enter the API key and user ID first.": "Indtast API-nøglen og bruger-id først.",
   "How to get Gelbooru credentials": "Sådan får du Gelbooru-legitimationsoplysninger",
-  "Enter Gelbooru user ID (number)...": "Indtast Gelbooru bruger-id (nummer)..."
+  "Enter Gelbooru user ID (number)...": "Indtast Gelbooru bruger-id (nummer)...",
+  "Rate limited. Try again later.": "Sats begrænset. Prøv igen senere.",
+  "Needs a valid API key. Turned it off.": "Kræver en gyldig API-nøgle. Slukkede den.",
+  "Is unreachable. Turned it off.": "Er uopnåelig. Slukkede den.",
+  "Failed. Turned it off.": "Mislykkedes. Slukkede den."
  },
  "fi": {
   "1. SEARCH TAGS TO TRIGGERS": "1. HAE TUNNISTEISTA TRIGGERIT",
@@ -5725,7 +5785,11 @@
   "TESTING...": "TESTAUS...",
   "Enter the API key and user ID first.": "Anna ensin API-avain ja käyttäjätunnus.",
   "How to get Gelbooru credentials": "Kuinka saada Gelbooru-kirjautumistiedot",
-  "Enter Gelbooru user ID (number)...": "Anna Gelbooru-käyttäjätunnus (numero)..."
+  "Enter Gelbooru user ID (number)...": "Anna Gelbooru-käyttäjätunnus (numero)...",
+  "Rate limited. Try again later.": "Hinta rajoitettu. Yritä myöhemmin uudelleen.",
+  "Needs a valid API key. Turned it off.": "Tarvitsee kelvollisen API-avaimen. Sammutti sen.",
+  "Is unreachable. Turned it off.": "On tavoittamaton. Sammutti sen.",
+  "Failed. Turned it off.": "Epäonnistui. Sammutti sen."
  },
  "cs": {
   "1. SEARCH TAGS TO TRIGGERS": "1. VYHLEDEJTE ZNAČKY K SPUŠTĚNÍM",
@@ -6083,7 +6147,11 @@
   "TESTING...": "TESTOVÁNÍ...",
   "Enter the API key and user ID first.": "Nejprve zadejte klíč API a ID uživatele.",
   "How to get Gelbooru credentials": "Jak získat přihlašovací údaje Gelbooru",
-  "Enter Gelbooru user ID (number)...": "Zadejte uživatelské ID (číslo) Gelbooru..."
+  "Enter Gelbooru user ID (number)...": "Zadejte uživatelské ID (číslo) Gelbooru...",
+  "Rate limited. Try again later.": "Sazba omezená. Zkuste to znovu později.",
+  "Needs a valid API key. Turned it off.": "Vyžaduje platný klíč API. Vypnul jsem to.",
+  "Is unreachable. Turned it off.": "Je nedosažitelný. Vypnul jsem to.",
+  "Failed. Turned it off.": "Nepodařilo se. Vypnul jsem to."
  },
  "hu": {
   "1. SEARCH TAGS TO TRIGGERS": "1. KERESSEN CÍMÉKEKET AZ INDÍTVÁNYOKHOZ",
@@ -6441,7 +6509,11 @@
   "TESTING...": "TESZTELÉS...",
   "Enter the API key and user ID first.": "Először adja meg az API-kulcsot és a felhasználói azonosítót.",
   "How to get Gelbooru credentials": "Gelbooru hitelesítő adatok beszerzése",
-  "Enter Gelbooru user ID (number)...": "Írja be a Gelbooru felhasználói azonosítót (számot)..."
+  "Enter Gelbooru user ID (number)...": "Írja be a Gelbooru felhasználói azonosítót (számot)...",
+  "Rate limited. Try again later.": "Ára korlátozott. Próbálja újra később.",
+  "Needs a valid API key. Turned it off.": "Érvényes API-kulcs szükséges. Kikapcsolta.",
+  "Is unreachable. Turned it off.": "Elérhetetlen. Kikapcsolta.",
+  "Failed. Turned it off.": "Sikertelen. Kikapcsolta."
  },
  "ro": {
   "1. SEARCH TAGS TO TRIGGERS": "1. CĂUTAȚI ETICHETE LA DECNICĂTORI",
@@ -6799,7 +6871,11 @@
   "TESTING...": "TESTARE...",
   "Enter the API key and user ID first.": "Introduceți mai întâi cheia API și ID-ul utilizatorului.",
   "How to get Gelbooru credentials": "Cum să obțineți acreditările Gelbooru",
-  "Enter Gelbooru user ID (number)...": "Introduceți ID-ul utilizatorului Gelbooru (număr)..."
+  "Enter Gelbooru user ID (number)...": "Introduceți ID-ul utilizatorului Gelbooru (număr)...",
+  "Rate limited. Try again later.": "Tarif limitat. Încercați din nou mai târziu.",
+  "Needs a valid API key. Turned it off.": "Necesită o cheie API validă. L-a oprit.",
+  "Is unreachable. Turned it off.": "Este inaccesibil. L-a oprit.",
+  "Failed. Turned it off.": "A eșuat. L-a oprit."
  },
  "tr": {
   "1. SEARCH TAGS TO TRIGGERS": "1. TETİKLEYİCİLER İÇİN ETİKETLERİ ARAYIN",
@@ -7157,7 +7233,11 @@
   "TESTING...": "TEST...",
   "Enter the API key and user ID first.": "Önce API anahtarını ve kullanıcı kimliğini girin.",
   "How to get Gelbooru credentials": "Gelbooru kimlik bilgileri nasıl alınır?",
-  "Enter Gelbooru user ID (number)...": "Gelbooru kullanıcı kimliğini (numarasını) girin..."
+  "Enter Gelbooru user ID (number)...": "Gelbooru kullanıcı kimliğini (numarasını) girin...",
+  "Rate limited. Try again later.": "Hız sınırlı. Daha sonra tekrar deneyin.",
+  "Needs a valid API key. Turned it off.": "Geçerli bir API anahtarı gerekiyor. Kapattım.",
+  "Is unreachable. Turned it off.": "Ulaşılamaz. Kapattım.",
+  "Failed. Turned it off.": "Arızalı. Kapattım."
  },
  "id": {
   "1. SEARCH TAGS TO TRIGGERS": "1. CARI TAG KE PEMICU",
@@ -7515,7 +7595,11 @@
   "TESTING...": "PENGUJIAN...",
   "Enter the API key and user ID first.": "Masukkan kunci API dan ID pengguna terlebih dahulu.",
   "How to get Gelbooru credentials": "Cara mendapatkan kredensial Gelbooru",
-  "Enter Gelbooru user ID (number)...": "Masukkan ID pengguna Gelbooru (nomor)..."
+  "Enter Gelbooru user ID (number)...": "Masukkan ID pengguna Gelbooru (nomor)...",
+  "Rate limited. Try again later.": "Tarif terbatas. Coba lagi nanti.",
+  "Needs a valid API key. Turned it off.": "Membutuhkan kunci API yang valid. Mematikannya.",
+  "Is unreachable. Turned it off.": "Tidak dapat dijangkau. Mematikannya.",
+  "Failed. Turned it off.": "Gagal. Mematikannya."
  },
  "vi": {
   "1. SEARCH TAGS TO TRIGGERS": "1. THẺ TÌM KIẾM ĐỂ KÍCH HOẠT",
@@ -7873,7 +7957,11 @@
   "TESTING...": "KIỂM TRA...",
   "Enter the API key and user ID first.": "Trước tiên hãy nhập khóa API và ID người dùng.",
   "How to get Gelbooru credentials": "Cách nhận thông tin đăng nhập Gelbooru",
-  "Enter Gelbooru user ID (number)...": "Nhập ID người dùng Gelbooru (số)..."
+  "Enter Gelbooru user ID (number)...": "Nhập ID người dùng Gelbooru (số)...",
+  "Rate limited. Try again later.": "Tỷ lệ giới hạn. Hãy thử lại sau.",
+  "Needs a valid API key. Turned it off.": "Cần có khóa API hợp lệ. Tắt nó đi.",
+  "Is unreachable. Turned it off.": "Không thể truy cập được. Tắt nó đi.",
+  "Failed. Turned it off.": "Thất bại. Tắt nó đi."
  },
  "en": {
   "Welcome": "Welcome"

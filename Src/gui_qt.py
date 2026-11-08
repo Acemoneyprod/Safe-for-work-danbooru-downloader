@@ -795,6 +795,7 @@ class UiBridge(QtCore.QObject):
     update_progress = Signal(int, int)
     update_downloaded = Signal(str)
     update_failed = Signal(str)
+    gelbooru_test = Signal(bool, str)
 
 
 
@@ -1311,6 +1312,7 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
         b.update_progress.connect(self._on_update_progress)
         b.update_downloaded.connect(self._on_update_downloaded)
         b.update_failed.connect(self._on_update_failed)
+        b.gelbooru_test.connect(self._on_gelbooru_test)
 
     def wire_config_callbacks(self):
         config.ON_PREVIEW_CALLBACK = self.on_image_preview_callback
@@ -1892,7 +1894,7 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
         grid.setColumnStretch(0, 1)
         grid.setColumnStretch(1, 1)
 
-        lookup = Card("Danbooru Tag Inspector",
+        lookup = Card("Tag Inspector",
                       "Check a tag, see its stats, copy suggestions",
                       fill=True)
         lookup.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding,
@@ -2171,19 +2173,45 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
         gel = QtWidgets.QVBoxLayout(gel_row)
         gel.setContentsMargins(0, 8, 0, 0)
         gel.setSpacing(4)
+        gel_title_row = QtWidgets.QWidget()
+        gel_title_row.setStyleSheet("background: transparent;")
+        gel_title_h = QtWidgets.QHBoxLayout(gel_title_row)
+        gel_title_h.setContentsMargins(0, 0, 0, 0)
+        gel_title_h.setSpacing(8)
         gel_title = QtWidgets.QLabel("GELBOORU CREDENTIALS")
         gel_title.setFont(F(11))
         gel_title.setStyleSheet(f"color: {COLOR_TEXT_WHITE};")
-        gel.addWidget(gel_title)
+        gel_title_h.addWidget(gel_title)
+        gel_title_h.addStretch(1)
+        self.lbl_gelbooru_help = QtWidgets.QLabel(
+            '<a href="https://gelbooru.com/index.php?page=wiki&s=view&id=18780" '
+            'style="color: %s; text-decoration: none;">%s</a>'
+            % (COLOR_TEXT_MUTED, i18n.tr("How to get Gelbooru credentials")))
+        self.lbl_gelbooru_help.setTextFormat(Qt.RichText)
+        self.lbl_gelbooru_help.setOpenExternalLinks(True)
+        self.lbl_gelbooru_help.setCursor(Qt.PointingHandCursor)
+        self.lbl_gelbooru_help.setStyleSheet("background: transparent;")
+        gel_title_h.addWidget(self.lbl_gelbooru_help)
+        gel.addWidget(gel_title_row)
         self.entry_gelbooru_key = _entry("Enter Gelbooru API key...", h=34)
         self.entry_gelbooru_key.setEchoMode(QtWidgets.QLineEdit.Password)
         self.entry_gelbooru_key.textChanged.connect(
             lambda _text: self._update_source_statuses())
         gel.addWidget(self.entry_gelbooru_key)
-        self.entry_gelbooru_user = _entry("Enter Gelbooru user ID...", h=34)
+        self.entry_gelbooru_user = _entry("Enter Gelbooru user ID (number)...", h=34)
         self.entry_gelbooru_user.textChanged.connect(
             lambda _text: self._update_source_statuses())
         gel.addWidget(self.entry_gelbooru_user)
+        test_row = QtWidgets.QWidget()
+        test_row.setStyleSheet("background: transparent;")
+        test_h = QtWidgets.QHBoxLayout(test_row)
+        test_h.setContentsMargins(0, 0, 0, 0)
+        test_h.addStretch(1)
+        self.btn_test_gelbooru = HoverButton(
+            "TEST", radius=8, font=B(9), height=30)
+        self.btn_test_gelbooru.clicked.connect(self._test_gelbooru)
+        test_h.addWidget(self.btn_test_gelbooru)
+        gel.addWidget(test_row)
         src.body.addWidget(gel_row)
 
         src_note = QtWidgets.QLabel(
@@ -3267,6 +3295,38 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
                 f"color: {color}; background: transparent;")
 
 
+    def _test_gelbooru(self):
+        api_key = self.entry_gelbooru_key.text().strip()
+        user_id = self.entry_gelbooru_user.text().strip()
+        if not api_key or not user_id:
+            self.show_toast(
+                "Gelbooru",
+                "Enter the API key and user ID first.",
+                kind="warning")
+            return
+        self.btn_test_gelbooru.setEnabled(False)
+        self.btn_test_gelbooru.setText(i18n.tr("TESTING..."))
+        threading.Thread(
+            target=self._test_gelbooru_worker,
+            args=(api_key, user_id), daemon=True).start()
+
+
+    def _test_gelbooru_worker(self, api_key, user_id):
+        try:
+            ok, message = sites.test_gelbooru(api_key, user_id)
+        except Exception as exc:
+            ok, message = False, str(exc)
+        self.bridge.gelbooru_test.emit(bool(ok), str(message))
+
+
+    def _on_gelbooru_test(self, ok, message):
+        self.btn_test_gelbooru.setEnabled(True)
+        self.btn_test_gelbooru.setText(i18n.tr("TEST"))
+        self.show_toast(
+            "Gelbooru", message,
+            kind="success" if ok else "error")
+
+
     def start_download(self):
         if self.is_running:
             return
@@ -4247,7 +4307,7 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
         if downloader.is_hard_blocked_tag_name(query):
             self.tag_result_view.show_message(f"'{query}' " + i18n.tr("is permanently blocked."))
             return
-        self.tag_result_view.show_message(i18n.tr("Querying Danbooru for") + f" '{query}'...")
+        self.tag_result_view.show_message(i18n.tr("Checking") + f" '{query}'...")
         threading.Thread(target=self._tag_lookup_worker, args=(query,),
                          daemon=True).start()
 

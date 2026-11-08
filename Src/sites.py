@@ -336,10 +336,12 @@ def _query_tokens(tags, allowed_prefixes, rating_tag):
     return " ".join(out)
 
 
-def _get(url, params):
+def _get(url, params, browser=False):
     import downloader
+    headers = {"User-Agent": _BROWSER_UA} if browser else None
     return downloader.http_get(
-        url, params=params, timeout=downloader.config.REQUEST_TIMEOUT,
+        url, params=params, headers=headers,
+        timeout=downloader.config.REQUEST_TIMEOUT,
         max_attempts=1, max_retry_delay=2.0)
 
 
@@ -422,7 +424,7 @@ class MoebooruAdapter(_Adapter):
             "tags": query,
             "limit": min(limit, self.max_limit),
             "page": page,
-        })
+        }, browser=True)
         response.raise_for_status()
         data = response.json()
         if not isinstance(data, list):
@@ -460,16 +462,20 @@ class GelbooruAdapter(_Adapter):
                        or "").strip()
             if not api_key or not user_id:
                 raise RuntimeError(
-                    "Gelbooru needs an API key and user ID. "
-                    "Add them in Settings.")
+                    "Needs an API key and user ID. Add them in Settings.")
             params["api_key"] = api_key
             params["user_id"] = user_id
-        response = _get(self.api_url, params)
+        response = _get(self.api_url, params, browser=True)
         if response.status_code == 401:
-            raise RuntimeError("Gelbooru rejected the API key or user ID.")
+            raise RuntimeError(
+                "Rejected the API key or user ID. Check both and make sure "
+                "API access is enabled in your Gelbooru account options.")
         response.raise_for_status()
         data = response.json()
         if isinstance(data, dict):
+            error = data.get("error") or data.get("message")
+            if error:
+                raise RuntimeError(f"Gelbooru: {error}")
             data = data.get("post") or []
         if not isinstance(data, list):
             data = []
@@ -511,6 +517,220 @@ def source_status(key):
         if not api_key or not user_id:
             return "Needs API key"
     return "Ready"
+
+
+_BROWSER_UA = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/124.0 Safari/537.36"
+)
+
+
+def _to_int(value, default=0):
+    try:
+        return int(value)
+    except Exception:
+        return default
+
+
+def _tag_category(type_id):
+    import downloader
+    return downloader.TAG_CATEGORIES.get(_to_int(type_id), "General")
+
+
+def _tag_entry(name, count, type_id):
+    return {
+        "value": name,
+        "label": name,
+        "category": _to_int(type_id),
+        "category_name": _tag_category(type_id),
+        "post_count": _to_int(count),
+        "is_autocorrect": False,
+        "antecedent": "",
+    }
+
+
+def _parse_tag_items(response):
+    try:
+        data = response.json()
+    except Exception:
+        data = None
+    if isinstance(data, dict):
+        error = data.get("error") or data.get("message")
+        if error:
+            raise RuntimeError(str(error))
+        data = data.get("tag") or data.get("tags") or []
+    if isinstance(data, list):
+        return [item for item in data if isinstance(item, dict)]
+    text = (response.text or "").strip()
+    if text.startswith("<"):
+        import xml.etree.ElementTree as ET
+        try:
+            root = ET.fromstring(text)
+            return [dict(element.attrib) for element in root.findall("tag")]
+        except Exception:
+            return []
+    return []
+
+
+def _tag_items(key, query, pattern=False):
+    import downloader
+    if key in ("konachan", "yandere", "sakugabooru"):
+        url = SOURCE_INFO[key]["base"] + "/tag.json"
+        response = downloader.http_get(
+            url, params={"name": query, "limit": 20}, timeout=6,
+            max_attempts=0, headers={"User-Agent": _BROWSER_UA})
+        response.raise_for_status()
+        data = response.json()
+        return data if isinstance(data, list) else []
+    if key in ("safebooru", "gelbooru"):
+        url = SOURCE_INFO[key]["base"] + "/index.php"
+        params = {
+            "page": "dapi",
+            "s": "tag",
+            "q": "index",
+            "json": "1",
+            "limit": 20,
+        }
+        if pattern:
+            params["name_pattern"] = query
+        else:
+            params["name"] = query
+        if key == "gelbooru":
+            api_key = (getattr(downloader.config, "GELBOORU_API_KEY", "")
+                       or "").strip()
+            user_id = (getattr(downloader.config, "GELBOORU_USER_ID", "")
+                       or "").strip()
+            if not api_key or not user_id:
+                raise RuntimeError("Gelbooru needs an API key and user ID.")
+            params["api_key"] = api_key
+            params["user_id"] = user_id
+        response = downloader.http_get(
+            url, params=params, timeout=8, max_attempts=0,
+            headers={"User-Agent": _BROWSER_UA})
+        if response.status_code == 401:
+            raise RuntimeError("Gelbooru rejected the API key or user ID.")
+        response.raise_for_status()
+        return _parse_tag_items(response)
+    return []
+
+
+def tag_lookup(key, query, limit=10):
+    query = (query or "").strip().lower()
+    if not query:
+        return None, []
+    items = _tag_items(key, query, pattern=False)
+    exact = None
+    suggestions = []
+    seen = set()
+    for item in items:
+        name = str(item.get("name") or "").strip()
+        if not name:
+            continue
+        count = _to_int(item.get("count"))
+        type_id = _to_int(item.get("type"))
+        if name.lower() == query:
+            exact = _tag_entry(name, count, type_id)
+        if name.lower().startswith(query) and name.lower() not in seen:
+            seen.add(name.lower())
+            suggestions.append(_tag_entry(name, count, type_id))
+
+    if key in ("safebooru", "gelbooru") and len(suggestions) < limit:
+        try:
+            for item in _tag_items(key, query, pattern=True):
+                name = str(item.get("name") or "").strip()
+                if not name:
+                    continue
+                count = _to_int(item.get("count"))
+                type_id = _to_int(item.get("type"))
+                if name.lower() == query and exact is None:
+                    exact = _tag_entry(name, count, type_id)
+                if name.lower().startswith(query) and name.lower() not in seen:
+                    seen.add(name.lower())
+                    suggestions.append(_tag_entry(name, count, type_id))
+        except Exception:
+            pass
+
+    suggestions = suggestions[:max(1, int(limit))]
+    if exact is not None:
+        details = {
+            "exists": True,
+            "name": query,
+            "post_count": exact["post_count"],
+            "category": exact["category"],
+            "category_name": exact["category_name"],
+            "is_filter": False,
+            "is_deprecated": False,
+            "suggestion": None,
+            "suggestion_count": 0,
+            "suggestion_category": 0,
+            "is_autocorrect": False,
+            "source": site_name(key),
+        }
+    else:
+        top = suggestions[0] if suggestions else None
+        details = {
+            "exists": False,
+            "name": query,
+            "post_count": 0,
+            "category": 0,
+            "category_name": "General",
+            "is_filter": False,
+            "is_deprecated": False,
+            "suggestion": top["value"] if top else None,
+            "suggestion_count": top["post_count"] if top else 0,
+            "suggestion_category": top["category"] if top else 0,
+            "is_autocorrect": False,
+            "source": site_name(key),
+        }
+    return details, suggestions
+
+
+def test_gelbooru(api_key, user_id):
+    import downloader
+    api_key = (api_key or "").strip()
+    user_id = (user_id or "").strip()
+    if not api_key or not user_id:
+        return False, "Gelbooru needs an API key and user ID."
+    try:
+        response = downloader.http_get(
+            "https://gelbooru.com/index.php",
+            params={
+                "page": "dapi",
+                "s": "post",
+                "q": "index",
+                "json": "1",
+                "limit": 1,
+                "tags": "rating:general",
+                "api_key": api_key,
+                "user_id": user_id,
+            },
+            timeout=15, max_attempts=0,
+            headers={"User-Agent": _BROWSER_UA})
+    except Exception as exc:
+        return False, f"Connection failed: {_short_error(exc)}"
+    if response.status_code == 401:
+        return False, ("Gelbooru rejected the API key or user ID. "
+                       "Check both and make sure API access is enabled "
+                       "in your Gelbooru account options.")
+    if response.status_code != 200:
+        return False, f"Gelbooru returned HTTP {response.status_code}."
+    try:
+        data = response.json()
+    except Exception:
+        return False, "Gelbooru returned a non-JSON response."
+    if isinstance(data, dict):
+        error = data.get("error") or data.get("message")
+        if error:
+            return False, str(error)
+        posts = data.get("post") or []
+    elif isinstance(data, list):
+        posts = data
+    else:
+        posts = []
+    if posts:
+        return True, "Gelbooru API works."
+    return True, "Gelbooru API responded, but returned no posts."
 
 
 def _short_error(exc):

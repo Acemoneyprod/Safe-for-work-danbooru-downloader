@@ -939,6 +939,9 @@ class TagResultView(QtWidgets.QWidget):
         hh.addWidget(self._chip(i18n.tr("FOUND") if exists else i18n.tr("NOT FOUND"),
                                 "#4ade80" if exists else "#e05555",
                                 "#4ade80" if exists else "#ff9696"))
+        source = details.get("source")
+        if source:
+            hh.addWidget(self._chip(str(source), "#82849e", COLOR_TEXT_MUTED))
         if details.get("is_deprecated"):
             hh.addWidget(self._chip(i18n.tr("DEPRECATED"), "#f59e0b", "#f59e0b"))
         hh.addStretch(1)

@@ -348,7 +348,14 @@
   "Enable at least one search source in Settings.": "設定で少なくとも 1 つの検索ソースを有効にします。",
   "OPEN ON SOURCE": "ソースで開く",
   "Loads posts from the enabled sources": "有効なソースから投稿をロードします",
-  "Please specify search tags before starting!": "開始する前に検索タグを指定してください。"
+  "Please specify search tags before starting!": "開始する前に検索タグを指定してください。",
+  "Tag Inspector": "タグインスペクター",
+  "Looking up": "見上げる",
+  "TEST": "テスト",
+  "TESTING...": "テスト中...",
+  "Enter the API key and user ID first.": "最初に API キーとユーザー ID を入力します。",
+  "How to get Gelbooru credentials": "Gelbooru 認証情報を取得する方法",
+  "Enter Gelbooru user ID (number)...": "Gelbooru ユーザー ID (番号) を入力してください..."
  },
  "zh": {
   "1. SEARCH TAGS TO TRIGGERS": "1. 搜索标签触发",
@@ -699,7 +706,14 @@
   "Enable at least one search source in Settings.": "在“设置”中启用至少一个搜索源。",
   "OPEN ON SOURCE": "在来源网站打开",
   "Loads posts from the enabled sources": "从启用的来源加载帖子",
-  "Please specify search tags before starting!": "请在开始之前指定搜索标签！"
+  "Please specify search tags before starting!": "请在开始之前指定搜索标签！",
+  "Tag Inspector": "标签检查器",
+  "Looking up": "抬头看",
+  "TEST": "测试",
+  "TESTING...": "测试...",
+  "Enter the API key and user ID first.": "首先输入 API 密钥和用户 ID。",
+  "How to get Gelbooru credentials": "如何获得 Gelboru 凭证",
+  "Enter Gelbooru user ID (number)...": "输入 Gelboru 用户 ID（号码）..."
  },
  "ko": {
   "1. SEARCH TAGS TO TRIGGERS": "1. 트리거할 태그 검색",
@@ -1050,7 +1064,14 @@
   "Enable at least one search source in Settings.": "설정에서 하나 이상의 검색 소스를 활성화하세요.",
   "OPEN ON SOURCE": "원본 사이트에서 열기",
   "Loads posts from the enabled sources": "활성화된 소스에서 게시물을 로드합니다.",
-  "Please specify search tags before starting!": "시작하기 전에 검색 태그를 지정하세요!"
+  "Please specify search tags before starting!": "시작하기 전에 검색 태그를 지정하세요!",
+  "Tag Inspector": "태그 검사기",
+  "Looking up": "위를 올려다보다",
+  "TEST": "시험",
+  "TESTING...": "테스트 중...",
+  "Enter the API key and user ID first.": "API 키와 사용자 ID를 먼저 입력하세요.",
+  "How to get Gelbooru credentials": "Gelbooru 자격 증명을 얻는 방법",
+  "Enter Gelbooru user ID (number)...": "Gelbooru 사용자 ID(번호)를 입력하세요..."
  },
  "pl": {
   "1. SEARCH TAGS TO TRIGGERS": "1. WYSZUKAJ TAGI DO WYZWALACZY",
@@ -1401,7 +1422,14 @@
   "Enable at least one search source in Settings.": "Włącz co najmniej jedno źródło wyszukiwania w Ustawieniach.",
   "OPEN ON SOURCE": "OTWÓRZ W ŹRÓDLE",
   "Loads posts from the enabled sources": "Ładuje posty z włączonych źródeł",
-  "Please specify search tags before starting!": "Przed rozpoczęciem określ znaczniki wyszukiwania!"
+  "Please specify search tags before starting!": "Przed rozpoczęciem określ znaczniki wyszukiwania!",
+  "Tag Inspector": "Inspektor tagów",
+  "Looking up": "Patrząc w górę",
+  "TEST": "TEST",
+  "TESTING...": "TESTOWANIE...",
+  "Enter the API key and user ID first.": "Najpierw wprowadź klucz API i identyfikator użytkownika.",
+  "How to get Gelbooru credentials": "Jak zdobyć referencje Gelbooru",
+  "Enter Gelbooru user ID (number)...": "Wprowadź identyfikator użytkownika Gelbooru (numer)..."
  },
  "ru": {
   "1. SEARCH TAGS TO TRIGGERS": "1. ПОИСК ТЕГОВ ПО ТРИГГЕРАМ",
@@ -1752,7 +1780,14 @@
   "Enable at least one search source in Settings.": "Включите хотя бы один источник поиска в настройках.",
   "OPEN ON SOURCE": "ОТКРЫТЬ НА САЙТЕ",
   "Loads posts from the enabled sources": "Загружает сообщения из включенных источников",
-  "Please specify search tags before starting!": "Пожалуйста, укажите теги поиска перед началом!"
+  "Please specify search tags before starting!": "Пожалуйста, укажите теги поиска перед началом!",
+  "Tag Inspector": "Инспектор тегов",
+  "Looking up": "Глядя вверх",
+  "TEST": "ТЕСТ",
+  "TESTING...": "ТЕСТИРОВАНИЕ...",
+  "Enter the API key and user ID first.": "Сначала введите ключ API и идентификатор пользователя.",
+  "How to get Gelbooru credentials": "Как получить учетные данные Gelbooru",
+  "Enter Gelbooru user ID (number)...": "Введите идентификатор пользователя Gelbooru (номер)..."
  },
  "uk": {
   "1. SEARCH TAGS TO TRIGGERS": "1. ПОШУК ТЕГІВ ДО ТРИГЕРІВ",
@@ -2103,7 +2138,14 @@
   "Enable at least one search source in Settings.": "Увімкніть принаймні одне джерело пошуку в налаштуваннях.",
   "OPEN ON SOURCE": "ВІДКРИТИ НА САЙТІ",
   "Loads posts from the enabled sources": "Завантажує публікації з увімкнених джерел",
-  "Please specify search tags before starting!": "Перед початком вкажіть пошукові теги!"
+  "Please specify search tags before starting!": "Перед початком вкажіть пошукові теги!",
+  "Tag Inspector": "Інспектор тегів",
+  "Looking up": "Дивлячись вгору",
+  "TEST": "ТЕСТ",
+  "TESTING...": "ТЕСТУВАННЯ...",
+  "Enter the API key and user ID first.": "Спочатку введіть ключ API та ідентифікатор користувача.",
+  "How to get Gelbooru credentials": "Як отримати облікові дані Gelbooru",
+  "Enter Gelbooru user ID (number)...": "Введіть ідентифікатор користувача Gelbooru (номер)..."
  },
  "de": {
   "1. SEARCH TAGS TO TRIGGERS": "1. Suchen Sie nach Tags nach Auslösern",
@@ -2454,7 +2496,14 @@
   "Enable at least one search source in Settings.": "Aktivieren Sie mindestens eine Suchquelle in den Einstellungen.",
   "OPEN ON SOURCE": "AUF QUELLE ÖFFNEN",
   "Loads posts from the enabled sources": "Lädt Beiträge aus den aktivierten Quellen",
-  "Please specify search tags before starting!": "Bitte geben Sie Such-Tags an, bevor Sie beginnen!"
+  "Please specify search tags before starting!": "Bitte geben Sie Such-Tags an, bevor Sie beginnen!",
+  "Tag Inspector": "Tag-Inspektor",
+  "Looking up": "Nach oben schauen",
+  "TEST": "PRÜFEN",
+  "TESTING...": "TESTEN...",
+  "Enter the API key and user ID first.": "Geben Sie zuerst den API-Schlüssel und die Benutzer-ID ein.",
+  "How to get Gelbooru credentials": "So erhalten Sie Gelbooru-Anmeldeinformationen",
+  "Enter Gelbooru user ID (number)...": "Geben Sie die Gelbooru-Benutzer-ID (Nummer) ein..."
  },
  "fr": {
   "1. SEARCH TAGS TO TRIGGERS": "1. RECHERCHER DES TAGS AUX DÉCLENCHEURS",
@@ -2805,7 +2854,14 @@
   "Enable at least one search source in Settings.": "Activez au moins une source de recherche dans Paramètres.",
   "OPEN ON SOURCE": "OUVRIR SUR LE SITE",
   "Loads posts from the enabled sources": "Charge les publications à partir des sources activées",
-  "Please specify search tags before starting!": "Veuillez spécifier les balises de recherche avant de commencer !"
+  "Please specify search tags before starting!": "Veuillez spécifier les balises de recherche avant de commencer !",
+  "Tag Inspector": "Inspecteur de balises",
+  "Looking up": "Levant les yeux",
+  "TEST": "TEST",
+  "TESTING...": "ESSAI...",
+  "Enter the API key and user ID first.": "Entrez d'abord la clé API et l'ID utilisateur.",
+  "How to get Gelbooru credentials": "Comment obtenir les informations d'identification Gelbooru",
+  "Enter Gelbooru user ID (number)...": "Entrez l'ID utilisateur (numéro) Gelbooru..."
  },
  "es": {
   "1. SEARCH TAGS TO TRIGGERS": "1. BUSCAR ETIQUETAS PARA DISPARADORES",
@@ -3156,7 +3212,14 @@
   "Enable at least one search source in Settings.": "Habilite al menos una fuente de búsqueda en Configuración.",
   "OPEN ON SOURCE": "ABRIR EN LA FUENTE",
   "Loads posts from the enabled sources": "Carga publicaciones de las fuentes habilitadas.",
-  "Please specify search tags before starting!": "¡Especifique las etiquetas de búsqueda antes de comenzar!"
+  "Please specify search tags before starting!": "¡Especifique las etiquetas de búsqueda antes de comenzar!",
+  "Tag Inspector": "Inspector de etiquetas",
+  "Looking up": "mirando hacia arriba",
+  "TEST": "PRUEBA",
+  "TESTING...": "PRUEBAS...",
+  "Enter the API key and user ID first.": "Ingrese primero la clave API y el ID de usuario.",
+  "How to get Gelbooru credentials": "Cómo obtener credenciales de Gelbooru",
+  "Enter Gelbooru user ID (number)...": "Ingrese el ID de usuario de Gelbooru (número)..."
  },
  "pt": {
   "1. SEARCH TAGS TO TRIGGERS": "1. PESQUISE TAGS PARA GATILHOS",
@@ -3507,7 +3570,14 @@
   "Enable at least one search source in Settings.": "Habilite pelo menos uma fonte de pesquisa em Configurações.",
   "OPEN ON SOURCE": "ABRIR NA FONTE",
   "Loads posts from the enabled sources": "Carrega postagens das fontes habilitadas",
-  "Please specify search tags before starting!": "Especifique as tags de pesquisa antes de começar!"
+  "Please specify search tags before starting!": "Especifique as tags de pesquisa antes de começar!",
+  "Tag Inspector": "Inspetor de tags",
+  "Looking up": "Olhando para cima",
+  "TEST": "TESTE",
+  "TESTING...": "TESTANDO...",
+  "Enter the API key and user ID first.": "Insira primeiro a chave API e o ID do usuário.",
+  "How to get Gelbooru credentials": "Como obter credenciais Gelbooru",
+  "Enter Gelbooru user ID (number)...": "Digite o ID do usuário Gelbooru (número)..."
  },
  "it": {
   "1. SEARCH TAGS TO TRIGGERS": "1. CERCA TAG PER TRIGGER",
@@ -3858,7 +3928,14 @@
   "Enable at least one search source in Settings.": "Abilita almeno una fonte di ricerca in Impostazioni.",
   "OPEN ON SOURCE": "APRI SULLA FONTE",
   "Loads posts from the enabled sources": "Carica i post dalle fonti abilitate",
-  "Please specify search tags before starting!": "Si prega di specificare i tag di ricerca prima di iniziare!"
+  "Please specify search tags before starting!": "Si prega di specificare i tag di ricerca prima di iniziare!",
+  "Tag Inspector": "Ispettore tag",
+  "Looking up": "Alzando lo sguardo",
+  "TEST": "TEST",
+  "TESTING...": "TEST...",
+  "Enter the API key and user ID first.": "Inserisci prima la chiave API e l'ID utente.",
+  "How to get Gelbooru credentials": "Come ottenere le credenziali Gelbooru",
+  "Enter Gelbooru user ID (number)...": "Inserisci l'ID utente Gelbooru (numero)..."
  },
  "nl": {
   "1. SEARCH TAGS TO TRIGGERS": "1. ZOEK TAGS NAAR TRIGGERS",
@@ -4209,7 +4286,14 @@
   "Enable at least one search source in Settings.": "Schakel ten minste één zoekbron in Instellingen in.",
   "OPEN ON SOURCE": "OPENEN OP BRON",
   "Loads posts from the enabled sources": "Laadt berichten uit de ingeschakelde bronnen",
-  "Please specify search tags before starting!": "Geef zoektags op voordat u begint!"
+  "Please specify search tags before starting!": "Geef zoektags op voordat u begint!",
+  "Tag Inspector": "Taginspecteur",
+  "Looking up": "Opkijken",
+  "TEST": "TEST",
+  "TESTING...": "TESTEN...",
+  "Enter the API key and user ID first.": "Voer eerst de API-sleutel en gebruikers-ID in.",
+  "How to get Gelbooru credentials": "Hoe u Gelbooru-inloggegevens kunt verkrijgen",
+  "Enter Gelbooru user ID (number)...": "Voer Gelbooru-gebruikers-ID (nummer) in..."
  },
  "sv": {
   "1. SEARCH TAGS TO TRIGGERS": "1. SÖK TAGGAR TILL TRIGGERS",
@@ -4560,7 +4644,14 @@
   "Enable at least one search source in Settings.": "Aktivera minst en sökkälla i Inställningar.",
   "OPEN ON SOURCE": "ÖPPNA PÅ KÄLLAN",
   "Loads posts from the enabled sources": "Laddar inlägg från de aktiverade källorna",
-  "Please specify search tags before starting!": "Vänligen ange söktaggar innan du börjar!"
+  "Please specify search tags before starting!": "Vänligen ange söktaggar innan du börjar!",
+  "Tag Inspector": "Tag Inspector",
+  "Looking up": "Tittar upp",
+  "TEST": "TESTA",
+  "TESTING...": "TESTNING...",
+  "Enter the API key and user ID first.": "Ange API-nyckeln och användar-ID först.",
+  "How to get Gelbooru credentials": "Hur man får Gelbooru-uppgifter",
+  "Enter Gelbooru user ID (number)...": "Ange Gelbooru användar-ID (nummer)..."
  },
  "no": {
   "1. SEARCH TAGS TO TRIGGERS": "1. SØK TAGGER TIL TRIGGERE",
@@ -4911,7 +5002,14 @@
   "Enable at least one search source in Settings.": "Aktiver minst én søkekilde i Innstillinger.",
   "OPEN ON SOURCE": "ÅPNE PÅ KILDEN",
   "Loads posts from the enabled sources": "Laster inn innlegg fra de aktiverte kildene",
-  "Please specify search tags before starting!": "Vennligst spesifiser søkekoder før du starter!"
+  "Please specify search tags before starting!": "Vennligst spesifiser søkekoder før du starter!",
+  "Tag Inspector": "Tag Inspector",
+  "Looking up": "Ser opp",
+  "TEST": "TEST",
+  "TESTING...": "TESTER...",
+  "Enter the API key and user ID first.": "Skriv inn API-nøkkelen og bruker-IDen først.",
+  "How to get Gelbooru credentials": "Hvordan få Gelbooru-legitimasjon",
+  "Enter Gelbooru user ID (number)...": "Skriv inn Gelbooru bruker-ID (nummer)..."
  },
  "da": {
   "1. SEARCH TAGS TO TRIGGERS": "1. SØG TAGS TIL TRIGGERE",
@@ -5262,7 +5360,14 @@
   "Enable at least one search source in Settings.": "Aktiver mindst én søgekilde i Indstillinger.",
   "OPEN ON SOURCE": "ÅBN PÅ KILDEN",
   "Loads posts from the enabled sources": "Indlæser indlæg fra de aktiverede kilder",
-  "Please specify search tags before starting!": "Angiv venligst søgetags før du starter!"
+  "Please specify search tags before starting!": "Angiv venligst søgetags før du starter!",
+  "Tag Inspector": "Tag Inspektør",
+  "Looking up": "Kigger op",
+  "TEST": "PRØVE",
+  "TESTING...": "TESTER...",
+  "Enter the API key and user ID first.": "Indtast API-nøglen og bruger-id først.",
+  "How to get Gelbooru credentials": "Sådan får du Gelbooru-legitimationsoplysninger",
+  "Enter Gelbooru user ID (number)...": "Indtast Gelbooru bruger-id (nummer)..."
  },
  "fi": {
   "1. SEARCH TAGS TO TRIGGERS": "1. HAE TUNNISTEISTA TRIGGERIT",
@@ -5613,7 +5718,14 @@
   "Enable at least one search source in Settings.": "Ota vähintään yksi hakulähde käyttöön asetuksissa.",
   "OPEN ON SOURCE": "AVAA LÄHTEESSÄ",
   "Loads posts from the enabled sources": "Lataa viestejä käytössä olevista lähteistä",
-  "Please specify search tags before starting!": "Määritä hakutunnisteet ennen aloittamista!"
+  "Please specify search tags before starting!": "Määritä hakutunnisteet ennen aloittamista!",
+  "Tag Inspector": "Tag Inspector",
+  "Looking up": "Katse ylös",
+  "TEST": "TESTATA",
+  "TESTING...": "TESTAUS...",
+  "Enter the API key and user ID first.": "Anna ensin API-avain ja käyttäjätunnus.",
+  "How to get Gelbooru credentials": "Kuinka saada Gelbooru-kirjautumistiedot",
+  "Enter Gelbooru user ID (number)...": "Anna Gelbooru-käyttäjätunnus (numero)..."
  },
  "cs": {
   "1. SEARCH TAGS TO TRIGGERS": "1. VYHLEDEJTE ZNAČKY K SPUŠTĚNÍM",
@@ -5964,7 +6076,14 @@
   "Enable at least one search source in Settings.": "V Nastavení povolte alespoň jeden zdroj vyhledávání.",
   "OPEN ON SOURCE": "OTEVŘÍT VE ZDROJI",
   "Loads posts from the enabled sources": "Načte příspěvky z povolených zdrojů",
-  "Please specify search tags before starting!": "Před zahájením prosím zadejte vyhledávací značky!"
+  "Please specify search tags before starting!": "Před zahájením prosím zadejte vyhledávací značky!",
+  "Tag Inspector": "Tag Inspector",
+  "Looking up": "vzhlédl",
+  "TEST": "TEST",
+  "TESTING...": "TESTOVÁNÍ...",
+  "Enter the API key and user ID first.": "Nejprve zadejte klíč API a ID uživatele.",
+  "How to get Gelbooru credentials": "Jak získat přihlašovací údaje Gelbooru",
+  "Enter Gelbooru user ID (number)...": "Zadejte uživatelské ID (číslo) Gelbooru..."
  },
  "hu": {
   "1. SEARCH TAGS TO TRIGGERS": "1. KERESSEN CÍMÉKEKET AZ INDÍTVÁNYOKHOZ",
@@ -6315,7 +6434,14 @@
   "Enable at least one search source in Settings.": "Engedélyezzen legalább egy keresési forrást a Beállításokban.",
   "OPEN ON SOURCE": "MEGNYITÁS A FORRÁSON",
   "Loads posts from the enabled sources": "Betölti a bejegyzéseket az engedélyezett forrásokból",
-  "Please specify search tags before starting!": "Mielőtt elkezdené, adja meg a keresési címkéket!"
+  "Please specify search tags before starting!": "Mielőtt elkezdené, adja meg a keresési címkéket!",
+  "Tag Inspector": "Címkeellenőr",
+  "Looking up": "Felnézni",
+  "TEST": "TESZT",
+  "TESTING...": "TESZTELÉS...",
+  "Enter the API key and user ID first.": "Először adja meg az API-kulcsot és a felhasználói azonosítót.",
+  "How to get Gelbooru credentials": "Gelbooru hitelesítő adatok beszerzése",
+  "Enter Gelbooru user ID (number)...": "Írja be a Gelbooru felhasználói azonosítót (számot)..."
  },
  "ro": {
   "1. SEARCH TAGS TO TRIGGERS": "1. CĂUTAȚI ETICHETE LA DECNICĂTORI",
@@ -6666,7 +6792,14 @@
   "Enable at least one search source in Settings.": "Activați cel puțin o sursă de căutare în Setări.",
   "OPEN ON SOURCE": "DESCHIDE PE SURSĂ",
   "Loads posts from the enabled sources": "Încarcă postări din sursele activate",
-  "Please specify search tags before starting!": "Vă rugăm să specificați etichetele de căutare înainte de a începe!"
+  "Please specify search tags before starting!": "Vă rugăm să specificați etichetele de căutare înainte de a începe!",
+  "Tag Inspector": "Tag Inspector",
+  "Looking up": "Privind în sus",
+  "TEST": "TEST",
+  "TESTING...": "TESTARE...",
+  "Enter the API key and user ID first.": "Introduceți mai întâi cheia API și ID-ul utilizatorului.",
+  "How to get Gelbooru credentials": "Cum să obțineți acreditările Gelbooru",
+  "Enter Gelbooru user ID (number)...": "Introduceți ID-ul utilizatorului Gelbooru (număr)..."
  },
  "tr": {
   "1. SEARCH TAGS TO TRIGGERS": "1. TETİKLEYİCİLER İÇİN ETİKETLERİ ARAYIN",
@@ -7017,7 +7150,14 @@
   "Enable at least one search source in Settings.": "Ayarlar'da en az bir arama kaynağını etkinleştirin.",
   "OPEN ON SOURCE": "KAYNAKTA AÇ",
   "Loads posts from the enabled sources": "Etkinleştirilen kaynaklardan gelen yayınları yükler",
-  "Please specify search tags before starting!": "Lütfen başlamadan önce arama etiketlerini belirtin!"
+  "Please specify search tags before starting!": "Lütfen başlamadan önce arama etiketlerini belirtin!",
+  "Tag Inspector": "Etiket Denetleyicisi",
+  "Looking up": "Yukarıya bakmak",
+  "TEST": "TEST",
+  "TESTING...": "TEST...",
+  "Enter the API key and user ID first.": "Önce API anahtarını ve kullanıcı kimliğini girin.",
+  "How to get Gelbooru credentials": "Gelbooru kimlik bilgileri nasıl alınır?",
+  "Enter Gelbooru user ID (number)...": "Gelbooru kullanıcı kimliğini (numarasını) girin..."
  },
  "id": {
   "1. SEARCH TAGS TO TRIGGERS": "1. CARI TAG KE PEMICU",
@@ -7368,7 +7508,14 @@
   "Enable at least one search source in Settings.": "Aktifkan setidaknya satu sumber pencarian di Pengaturan.",
   "OPEN ON SOURCE": "BUKA DI SUMBER",
   "Loads posts from the enabled sources": "Memuat postingan dari sumber yang diaktifkan",
-  "Please specify search tags before starting!": "Silakan tentukan tag pencarian sebelum memulai!"
+  "Please specify search tags before starting!": "Silakan tentukan tag pencarian sebelum memulai!",
+  "Tag Inspector": "Pemeriksa Tag",
+  "Looking up": "Melihat ke atas",
+  "TEST": "TES",
+  "TESTING...": "PENGUJIAN...",
+  "Enter the API key and user ID first.": "Masukkan kunci API dan ID pengguna terlebih dahulu.",
+  "How to get Gelbooru credentials": "Cara mendapatkan kredensial Gelbooru",
+  "Enter Gelbooru user ID (number)...": "Masukkan ID pengguna Gelbooru (nomor)..."
  },
  "vi": {
   "1. SEARCH TAGS TO TRIGGERS": "1. THẺ TÌM KIẾM ĐỂ KÍCH HOẠT",
@@ -7719,7 +7866,14 @@
   "Enable at least one search source in Settings.": "Bật ít nhất một nguồn tìm kiếm trong Cài đặt.",
   "OPEN ON SOURCE": "MỞ TRÊN NGUỒN",
   "Loads posts from the enabled sources": "Tải bài viết từ các nguồn được kích hoạt",
-  "Please specify search tags before starting!": "Vui lòng chỉ định thẻ tìm kiếm trước khi bắt đầu!"
+  "Please specify search tags before starting!": "Vui lòng chỉ định thẻ tìm kiếm trước khi bắt đầu!",
+  "Tag Inspector": "Trình kiểm tra thẻ",
+  "Looking up": "Nhìn lên",
+  "TEST": "BÀI KIỂM TRA",
+  "TESTING...": "KIỂM TRA...",
+  "Enter the API key and user ID first.": "Trước tiên hãy nhập khóa API và ID người dùng.",
+  "How to get Gelbooru credentials": "Cách nhận thông tin đăng nhập Gelbooru",
+  "Enter Gelbooru user ID (number)...": "Nhập ID người dùng Gelbooru (số)..."
  },
  "en": {
   "Welcome": "Welcome"

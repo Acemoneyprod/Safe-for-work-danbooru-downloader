@@ -117,7 +117,7 @@ def fetch_tag_suggestions(query, limit=10):
             "version": "1",
             "limit": limit
         }
-        resp = http_get(url, params=params, timeout=5)
+        resp = http_get(url, params=params, timeout=5, max_attempts=0)
         if resp.status_code == 200:
             data = resp.json()
             results = []
@@ -137,14 +137,25 @@ def fetch_tag_suggestions(query, limit=10):
                     "is_autocorrect": is_autocorrect,
                     "antecedent": antecedent
                 })
-            return results
+            if results:
+                return results
     except Exception as e:
         logging.debug(f"fetch_tag_suggestions error: {e}")
+    for key in sites.enabled_sources():
+        if key == "danbooru":
+            continue
+        try:
+            _details, suggestions = sites.tag_lookup(key, query, limit)
+            if suggestions:
+                return suggestions
+        except Exception as e:
+            logging.debug(f"tag suggestions fallback {key}: {e}")
     return []
 
 def check_tag_details(tag_name):
     if not tag_name or not tag_name.strip():
-        return {"exists": False, "name": tag_name, "post_count": 0, "category": 0, "is_filter": False}
+        return {"exists": False, "name": tag_name, "post_count": 0,
+                "category": 0, "is_filter": False, "source": None}
     
     tag = tag_name.strip().lower()
     for prefix in FILTER_PREFIXES:
@@ -155,7 +166,8 @@ def check_tag_details(tag_name):
                 "post_count": None,
                 "category": 5,
                 "category_name": "Filter",
-                "is_filter": True
+                "is_filter": True,
+                "source": None
             }
     
     tag_info = {
@@ -169,12 +181,14 @@ def check_tag_details(tag_name):
         "suggestion": None,
         "suggestion_count": 0,
         "suggestion_category": 0,
-        "is_autocorrect": False
+        "is_autocorrect": False,
+        "source": None
     }
     
     try:
         url = "https://danbooru.donmai.us/tags.json"
-        resp = http_get(url, params={"search[name_matches]": tag}, timeout=5)
+        resp = http_get(url, params={"search[name_matches]": tag},
+                        timeout=5, max_attempts=0)
         if resp.status_code == 200:
             data = resp.json()
             for t in data:
@@ -188,7 +202,11 @@ def check_tag_details(tag_name):
         
         if not tag_info["exists"] or tag_info["post_count"] == 0:
             auto_url = "https://danbooru.donmai.us/autocomplete.json"
-            auto_resp = http_get(auto_url, params={"search[query]": tag, "search[type]": "tag_query", "version": "1"}, timeout=5)
+            auto_resp = http_get(
+                auto_url,
+                params={"search[query]": tag, "search[type]": "tag_query",
+                        "version": "1"},
+                timeout=5, max_attempts=0)
             if auto_resp.status_code == 200:
                 auto_data = auto_resp.json()
                 for item in auto_data:
@@ -206,7 +224,21 @@ def check_tag_details(tag_name):
                     tag_info["is_autocorrect"] = top.get("type") == "tag-autocorrect"
     except Exception as e:
         logging.debug(f"check_tag_details error: {e}")
-        
+
+    if tag_info["exists"] or tag_info["suggestion"]:
+        tag_info["source"] = "Danbooru"
+        return tag_info
+
+    for key in sites.enabled_sources():
+        if key == "danbooru":
+            continue
+        try:
+            details, _suggestions = sites.tag_lookup(key, tag, 10)
+            if details and (details.get("exists") or details.get("suggestion")):
+                return details
+        except Exception as e:
+            logging.debug(f"check_tag_details fallback {key}: {e}")
+
     return tag_info
 
 
@@ -305,6 +337,80 @@ HARD_BLOCKED_FRANCHISES = (
     "league_of_legends",
 )
 
+STRICT_SFW_TAGS = frozenset({
+    "ass", "butt", "breasts", "boobs", "panties", "pantsu", "underwear",
+    "bra", "bikini", "swimsuit", "swimsuits", "swimwear", "lingerie",
+    "garter", "garter_belt", "cleavage", "underboob", "sideboob",
+    "cameltoe", "upskirt", "downblouse", "see_through",
+    "transparent_clothing", "open_shirt", "shirt_lift", "skirt_lift",
+    "clothing_lift", "dress_lift", "no_bra", "no_panties",
+    "panties_pull", "panty_pull", "erect_nipples", "puffy_nipples",
+    "nipple_slip", "nipple_piercing", "nude", "naked", "nudity",
+    "topless", "bottomless", "undressing", "undressed", "partially_nude",
+    "clothed_sex", "sex", "sexual_intercourse", "vaginal", "anal", "oral",
+    "fellatio", "cunnilingus", "penetration", "ejaculation", "cum",
+    "cumshot", "creampie", "orgasm", "masturbation", "fingering",
+    "handjob", "paizuri", "titfuck", "ahegao", "spread_legs",
+    "spread_pussy", "spread_anus", "legs_apart", "legs_up", "all_fours",
+    "presenting", "presenting_pussy", "presenting_anus", "on_back",
+    "lying_on_back", "knees_up", "bending_over", "missionary",
+    "doggy_style", "cowgirl_position", "sex_from_behind",
+    "grinding", "humping", "tribadism", "scissoring", "futanari",
+    "intersex", "dickgirl", "shemale", "newhalf", "tentacles",
+    "tentacle_rape", "rape", "molestation", "bondage", "bdsm", "shibari",
+    "spanking", "whipping", "leash", "succubus", "bunnygirl",
+    "playboy_bunny", "bunny_suit", "skintight", "erotic", "lewd", "nsfw",
+    "explicit", "questionable", "sensitive", "suggestive",
+    "sexually_suggestive", "seductive", "sultry", "hentai", "ecchi",
+    "uncensored", "censored", "guro", "vore", "gore", "crotch",
+    "crotch_shot", "crotchless", "breast_hold", "breast_grab",
+    "breast_press", "breast_squeeze", "ass_grab", "butt_grab", "groping",
+    "wet_clothes", "wet_shirt", "wet_panties", "tight_clothes", "wet",
+    "fishnets", "fishnet",
+})
+
+STRICT_SFW_PREFIXES = (
+    "bikini", "swimsuit", "swimwear", "lingerie", "garter", "see_through",
+    "open_shirt", "shirt_lift", "skirt_lift", "clothing_lift", "dress_lift",
+    "nipple", "erect_nipples", "puffy_nipples", "underboob", "sideboob",
+    "cleavage", "cameltoe", "upskirt", "downblouse", "crotch", "breast_",
+    "ass_", "butt_", "panty_", "panties", "pantsu", "underwear",
+    "breasts", "boobs", "bra_",
+    "nude", "naked", "topless", "bottomless", "undress", "partially_nude",
+    "clothed_sex", "sex", "cum", "anal_", "oral_", "fellatio",
+    "cunnilingus", "penetration", "ejaculation", "creampie", "orgasm",
+    "masturbation", "fingering", "handjob", "paizuri", "titfuck",
+    "ahegao", "spread_legs", "spread_pussy", "spread_anus", "legs_apart",
+    "legs_up", "all_fours", "presenting", "on_back", "lying_on_back",
+    "knees_up", "bending_over", "missionary", "doggy_style",
+    "cowgirl_position", "sex_from_behind", "grinding", "humping",
+    "tribadism", "scissoring", "futanari", "intersex", "dickgirl",
+    "shemale", "newhalf", "tentacle", "rape", "molestation", "bondage",
+    "bdsm", "shibari", "spanking", "whipping", "leash", "succubus",
+    "bunnygirl", "playboy_bunny", "bunny_suit", "skintight", "erotic",
+    "lewd", "nsfw", "explicit", "questionable", "sensitive", "suggestive",
+    "sexually_suggestive", "seductive", "sultry", "hentai", "ecchi",
+    "uncensored", "censored", "guro", "vore", "gore", "fishnet",
+)
+
+STRICT_SFW_SUFFIXES = (
+    "_ass", "_butt", "_panties", "_breasts", "_nipples", "_underwear",
+    "_bra", "_bikini", "_swimsuit", "_swimwear", "_lingerie", "_garter",
+)
+
+
+def is_strict_sfw_tag(tag: str) -> bool:
+    tag = (tag or "").strip().lower()
+    if not tag:
+        return False
+    if tag in STRICT_SFW_TAGS:
+        return True
+    if tag.startswith(STRICT_SFW_PREFIXES):
+        return True
+    if tag.endswith(STRICT_SFW_SUFFIXES):
+        return True
+    return False
+
 
 def is_hard_blocked_tag_name(tag: str) -> bool:
     tag = (tag or "").strip().lower()
@@ -331,6 +437,8 @@ def hard_block_reason(post) -> str | None:
     for tag in tags:
         if is_hard_blocked_tag_name(tag):
             return f"hard blocked tag: {tag}"
+        if is_strict_sfw_tag(tag):
+            return f"strict SFW tag: {tag}"
     return None
 
 def wait_if_paused():

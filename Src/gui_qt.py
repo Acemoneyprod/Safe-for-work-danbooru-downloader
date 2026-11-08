@@ -35,6 +35,8 @@ except Exception:
     ASSETS_DIR = os.path.join(BASE_DIR, "assets")
 
 import downloader
+import sites
+from sites import post_key
 from downloader import (
     config,
     check_tag_details,
@@ -783,8 +785,8 @@ class UiBridge(QtCore.QObject):
     log_entry = Signal(int, str)
     preview_results = Signal(int, int, list, str, bool, int, str)
     preview_prefetched = Signal(object)
-    thumb_done = Signal(int, QtGui.QImage)
-    thumb_failed = Signal(int)
+    thumb_done = Signal(str, QtGui.QImage)
+    thumb_failed = Signal(str)
     large_done = Signal(int, QtGui.QImage)
     large_failed = Signal(int)
     tag_results = Signal(str, object, object)
@@ -953,6 +955,19 @@ class PreviewPostCard(QtWidgets.QFrame):
         info.setFont(F(9))
         info.setStyleSheet(f"color: {COLOR_TEXT_MUTED};")
         v.addWidget(info)
+
+        site_label = (post.get("site_name") or "").upper()
+        if site_label:
+            self.badge = QtWidgets.QLabel(site_label, self.thumb)
+            self.badge.setFont(B(8))
+            self.badge.setStyleSheet(
+                "background: rgba(0, 0, 0, 165);"
+                f"color: {COLOR_TEXT_WHITE}; border-radius: 4px;"
+                "padding: 1px 5px;")
+            self.badge.adjustSize()
+            self.badge.move(6, 6)
+            self.badge.setAttribute(Qt.WA_TransparentForMouseEvents, True)
+            self.badge.raise_()
 
     def paintEvent(self, ev):
         p = QtGui.QPainter(self)
@@ -1191,6 +1206,7 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
         self._preview_next_raw = None
         self._preview_history = []
         self._preview_search_gen = 0
+        self._preview_session = "preview"
         self._preview_cache = {}
         self._preview_cache_order = []
         self._prefetch_queued = set()
@@ -1479,7 +1495,7 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
         t(self.btn_action_folder, "Open the folder with your downloaded files")
 
         t(self.entry_preview_tags, "Type tags to browse posts before downloading")
-        t(self.btn_preview_search, "Loads posts from Danbooru to preview")
+        t(self.btn_preview_search, "Loads posts from the enabled sources")
         t(self.btn_use_download_tags, "Copies your downloader tags into this search")
         t(self.btn_preview_prev, "Previous page of posts")
         t(self.btn_preview_next, "Next page of posts")
@@ -2116,6 +2132,69 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
         fmts.body.addLayout(fgrid)
         fmts.body.addStretch(1)
 
+        src = Card("SEARCH SOURCES", "Sites searched together")
+        src.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding,
+                          QtWidgets.QSizePolicy.Policy.Preferred)
+        grid.addWidget(src, 2, 0, 1, 2)
+        self.source_switches = {}
+        self.source_status_labels = {}
+        for key in sites.SOURCE_ORDER:
+            info = sites.SOURCE_INFO[key]
+            row = QtWidgets.QFrame()
+            row.setStyleSheet("background: transparent;")
+            rh = QtWidgets.QHBoxLayout(row)
+            rh.setContentsMargins(0, 3, 0, 3)
+            rh.setSpacing(10)
+            names = QtWidgets.QVBoxLayout()
+            names.setContentsMargins(0, 0, 0, 0)
+            names.setSpacing(0)
+            name_lbl = QtWidgets.QLabel(info["name"])
+            name_lbl.setFont(F(12))
+            name_lbl.setStyleSheet(f"color: {COLOR_TEXT_WHITE};")
+            names.addWidget(name_lbl)
+            status_lbl = QtWidgets.QLabel("")
+            status_lbl.setFont(F(9))
+            status_lbl._i18n_dynamic = True
+            names.addWidget(status_lbl)
+            rh.addLayout(names)
+            rh.addStretch(1)
+            switch = ToggleSwitchWidget(bool(info["default"]))
+            switch.toggled.connect(
+                lambda _checked: self._update_source_statuses())
+            rh.addWidget(switch)
+            src.body.addWidget(row)
+            self.source_switches[key] = switch
+            self.source_status_labels[key] = status_lbl
+
+        gel_row = QtWidgets.QFrame()
+        gel_row.setStyleSheet("background: transparent;")
+        gel = QtWidgets.QVBoxLayout(gel_row)
+        gel.setContentsMargins(0, 8, 0, 0)
+        gel.setSpacing(4)
+        gel_title = QtWidgets.QLabel("GELBOORU CREDENTIALS")
+        gel_title.setFont(F(11))
+        gel_title.setStyleSheet(f"color: {COLOR_TEXT_WHITE};")
+        gel.addWidget(gel_title)
+        self.entry_gelbooru_key = _entry("Enter Gelbooru API key...", h=34)
+        self.entry_gelbooru_key.setEchoMode(QtWidgets.QLineEdit.Password)
+        self.entry_gelbooru_key.textChanged.connect(
+            lambda _text: self._update_source_statuses())
+        gel.addWidget(self.entry_gelbooru_key)
+        self.entry_gelbooru_user = _entry("Enter Gelbooru user ID...", h=34)
+        self.entry_gelbooru_user.textChanged.connect(
+            lambda _text: self._update_source_statuses())
+        gel.addWidget(self.entry_gelbooru_user)
+        src.body.addWidget(gel_row)
+
+        src_note = QtWidgets.QLabel(
+            "Sources are searched together. Duplicate images are hidden.")
+        src_note.setFont(F(9))
+        src_note.setWordWrap(True)
+        src_note.setStyleSheet(
+            f"color: {COLOR_TEXT_INACTIVE}; background: transparent;")
+        src.body.addWidget(src_note)
+        self._update_source_statuses()
+
 
         cfgbar = Card("SAVE CONFIGURATION", "Choose a config file")
         crow = QtWidgets.QFrame()
@@ -2201,10 +2280,10 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
             ah.addWidget(b_un, 1)
             appcard.body.addWidget(arow)
             appcard.body.addStretch(1)
-            grid.addWidget(cfgbar, 2, 0)
-            grid.addWidget(appcard, 2, 1)
+            grid.addWidget(cfgbar, 3, 0)
+            grid.addWidget(appcard, 3, 1)
         else:
-            grid.addWidget(cfgbar, 2, 0, 1, 2)
+            grid.addWidget(cfgbar, 3, 0, 1, 2)
 
         upd = Card("UPDATES", "Version and releases")
         upd.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding,
@@ -2240,13 +2319,14 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
         uh.addWidget(self.btn_update_install)
         uh.addStretch(1)
         upd.body.addWidget(urow)
-        grid.addWidget(upd, 3, 0, 1, 2)
+        grid.addWidget(upd, 4, 0, 1, 2)
 
         grid.setRowStretch(0, 0)
         grid.setRowStretch(1, 0)
         grid.setRowStretch(2, 0)
         grid.setRowStretch(3, 0)
-        grid.setRowStretch(4, 1)
+        grid.setRowStretch(4, 0)
+        grid.setRowStretch(5, 1)
 
         self._config_path = CONFIG_FILE
         self.refresh_config_profiles()
@@ -2690,6 +2770,7 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
         except Exception:
             pass
         self._update_username_privacy()
+        self._update_source_statuses()
         self._fit_credit_buttons()
         try:
             self.lbl_update_version.setText(
@@ -2982,6 +3063,12 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
             "save_txt_tags": self.switch_save_txt.isChecked(),
             "formats": self.get_formats(),
             "language": i18n.current_language(),
+            "sources": {
+                key: switch.isChecked()
+                for key, switch in self.source_switches.items()
+            },
+            "gelbooru_api_key": self.entry_gelbooru_key.text().strip(),
+            "gelbooru_user_id": self.entry_gelbooru_user.text().strip(),
         }
         path = getattr(self, "_config_path", CONFIG_FILE)
         try:
@@ -3039,6 +3126,15 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
         self.entry_username.insert(d.get("username", ""))
         self.entry_api_key.clear()
         self.entry_api_key.insert(d.get("api_key", ""))
+        self.entry_gelbooru_key.clear()
+        self.entry_gelbooru_key.insert(d.get("gelbooru_api_key", ""))
+        self.entry_gelbooru_user.clear()
+        self.entry_gelbooru_user.insert(d.get("gelbooru_user_id", ""))
+        source_values = d.get("sources") or {}
+        for key, switch in self.source_switches.items():
+            switch.setChecked(bool(source_values.get(
+                key, sites.DEFAULT_SOURCES.get(key, False))))
+        self._update_source_statuses()
         self.set_formats(d.get("formats",
                                "jpg, jpeg, png, gif, webp, bmp, mp4, webm"))
         self.on_folder_option_changed(self.menu_folder_option.currentText())
@@ -3127,6 +3223,12 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
         config.INCLUDE_META_TAGS = self.switch_tag_meta.isChecked()
         config.USERNAME = self.entry_username.text().strip()
         config.API_KEY = self.entry_api_key.text().strip()
+        config.SOURCES = {
+            key: switch.isChecked()
+            for key, switch in self.source_switches.items()
+        }
+        config.GELBOORU_API_KEY = self.entry_gelbooru_key.text().strip()
+        config.GELBOORU_USER_ID = self.entry_gelbooru_user.text().strip()
         raw_formats = self.get_formats()
         if raw_formats:
             config.ALLOWED_EXTENSIONS = {
@@ -3134,6 +3236,35 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
                 for ext in raw_formats.split(',') if ext.strip()}
         config.SAVE_FOLDER = create_save_folder()
         config.CANCELLED = False
+
+
+    def _enabled_source_keys(self):
+        return [
+            key for key, switch in getattr(self, "source_switches", {}).items()
+            if switch.isChecked()
+        ]
+
+
+    def _update_source_statuses(self):
+        switches = getattr(self, "source_switches", None)
+        if not switches:
+            return
+        key_text = (self.entry_gelbooru_key.text().strip()
+                    if hasattr(self, "entry_gelbooru_key") else "")
+        user_text = (self.entry_gelbooru_user.text().strip()
+                     if hasattr(self, "entry_gelbooru_user") else "")
+        for key, switch in switches.items():
+            label = self.source_status_labels[key]
+            if not switch.isChecked():
+                text, color = "Off", COLOR_TEXT_INACTIVE
+            elif sites.SOURCE_INFO[key]["needs_key"] and not (
+                    key_text and user_text):
+                text, color = "Needs API key", COLOR_WARN
+            else:
+                text, color = "Ready", COLOR_SUCCESS
+            label.setText(i18n.tr(text))
+            label.setStyleSheet(
+                f"color: {color}; background: transparent;")
 
 
     def start_download(self):
@@ -3144,8 +3275,14 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
         if not tags:
             self.show_toast(
                 "Empty Query",
-                "Please specify Danbooru tags before starting!",
+                "Please specify search tags before starting!",
                 kind="error")
+            return
+        if not self._enabled_source_keys():
+            self.show_toast(
+                "No Sources",
+                "Enable at least one search source in Settings.",
+                kind="warning")
             return
         if not downloader.sanitize_sfw_query(tags):
             self.show_toast(
@@ -3530,6 +3667,7 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
     def start_preview_search(self, page=1):
         self._preview_history = []
         self._preview_search_gen += 1
+        self._preview_session = f"preview-{time.time_ns()}"
         self._preview_cache.clear()
         self._preview_cache_order.clear()
         self._prefetch_queued.clear()
@@ -3552,10 +3690,10 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
         threading.Thread(
             target=self._prefetch_worker,
             args=(self._preview_search_gen, tags, int(start_raw),
-                  self._prefetch_depth),
+                  self._prefetch_depth, self._preview_session),
             daemon=True).start()
 
-    def _prefetch_worker(self, gen, tags, raw_start, depth):
+    def _prefetch_worker(self, gen, tags, raw_start, depth, session):
         raw = raw_start
         for _ in range(depth):
             if self._closing or gen != self._preview_search_gen:
@@ -3563,7 +3701,8 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
             try:
                 posts, note, has_more, next_raw = \
                     downloader.fetch_posts_for_preview(
-                        tags, page=1, limit=40, start_raw=raw)
+                        tags, page=1, limit=40, start_raw=raw,
+                        session=session, reset=False)
             except Exception:
                 return
             if self._closing or gen != self._preview_search_gen:
@@ -3600,6 +3739,12 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
             self.show_toast("Preview", "Please enter tags to preview.",
                             kind="warning")
             return
+        if not self._enabled_source_keys():
+            self.show_toast(
+                "No Sources",
+                "Enable at least one search source in Settings.",
+                kind="warning")
+            return
         if self.active_tab_index != 1:
             self.select_tab(1)
         self._apply_preview_config()
@@ -3628,13 +3773,16 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
         self.btn_preview_search.setText("LOADING...")
         self._clear_grid("Loading posts...")
         threading.Thread(target=self._preview_search_worker,
-                         args=(request_id, self._preview_page, tags, start_raw),
+                         args=(request_id, self._preview_page, tags, start_raw,
+                               self._preview_session),
                          daemon=True).start()
 
-    def _preview_search_worker(self, request_id, page, tags, start_raw):
+    def _preview_search_worker(self, request_id, page, tags, start_raw,
+                               session):
         try:
             posts, note, has_more, next_raw = downloader.fetch_posts_for_preview(
-                tags, page=page, limit=40, start_raw=start_raw)
+                tags, page=page, limit=40, start_raw=start_raw,
+                session=session, reset=(start_raw is None))
             self.bridge.preview_results.emit(request_id, page, posts, note,
                                              has_more,
                                              int(next_raw) if next_raw else 0,
@@ -3681,6 +3829,7 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
             w = item.widget() if item else None
             if w is not None and w is not self.preview_empty_label:
                 w.deleteLater()
+        self.preview_empty_label.hide()
         self._preview_cards.clear()
         self._preview_posts = []
 
@@ -3688,6 +3837,7 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
         self._grid_clear_widgets()
         if message is not None:
             self.preview_empty_label.setText(message)
+            self.preview_empty_label.show()
             self.preview_grid.addWidget(self.preview_empty_label, 0, 0, 1, 5)
 
     def _populate_grid(self, posts):
@@ -3695,6 +3845,7 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
         self._preview_posts = list(posts or [])
         if not self._preview_posts:
             self.preview_empty_label.setText("No posts found.")
+            self.preview_empty_label.show()
             self.preview_grid.addWidget(self.preview_empty_label, 0, 0, 1, 5)
             return
         for index, post in enumerate(posts):
@@ -3703,69 +3854,70 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
             card.open_requested.connect(self._open_overlay)
             card.toggle_requested.connect(self.toggle_preview_selection)
             self.preview_grid.addWidget(card, row, colx)
-            self._preview_cards[post["id"]] = card
-            if post["id"] in self._selected_posts:
+            key = post_key(post)
+            self._preview_cards[key] = card
+            if key in self._selected_posts:
                 card.set_selected(True)
             self._load_thumbnail(post)
         self._grid_holder.adjustSize()
 
     def _load_thumbnail(self, post):
-        post_id = post.get("id")
-        card = self._preview_cards.get(post_id)
+        key = post_key(post)
+        card = self._preview_cards.get(key)
         if card is None:
             return
-        cached = self._thumb_cache.get(post_id)
+        cached = self._thumb_cache.get(key)
         if cached is not None:
             card.set_image(cached)
             return
-        if post_id in self._thumb_pending:
+        if key in self._thumb_pending:
             return
         url = post.get("preview_file_url") or post.get("large_file_url") \
             or post.get("file_url")
         if not url:
             card.set_failed()
             return
-        self._thumb_pending.add(post_id)
-        self._img_executor.submit(self._thumb_worker, post_id, url)
+        self._thumb_pending.add(key)
+        self._img_executor.submit(self._thumb_worker, key, url)
 
-    def _thumb_worker(self, post_id, url):
+    def _thumb_worker(self, key, url):
         try:
             response = downloader.http_get(url, timeout=config.REQUEST_TIMEOUT)
             response.raise_for_status()
             img = _letterbox(response.content, (180, 180))
-            self.bridge.thumb_done.emit(post_id, img)
+            self.bridge.thumb_done.emit(key, img)
         except Exception:
-            self.bridge.thumb_failed.emit(post_id)
+            self.bridge.thumb_failed.emit(key)
 
-    def _on_thumb_done(self, post_id, image):
-        self._thumb_pending.discard(post_id)
+    def _on_thumb_done(self, key, image):
+        self._thumb_pending.discard(key)
         if len(self._thumb_cache) > 600:
             self._thumb_cache.clear()
-        self._thumb_cache[post_id] = image
-        card = self._preview_cards.get(post_id)
+        self._thumb_cache[key] = image
+        card = self._preview_cards.get(key)
         if card is not None:
             card.set_image(image)
 
-    def _on_thumb_failed(self, post_id):
-        self._thumb_pending.discard(post_id)
-        card = self._preview_cards.get(post_id)
+    def _on_thumb_failed(self, key):
+        self._thumb_pending.discard(key)
+        card = self._preview_cards.get(key)
         if card is not None:
             card.set_failed()
 
 
     def toggle_preview_selection(self, post, refresh_overlay=False):
-        post_id = post.get("id")
-        if post_id in self._selected_posts:
-            del self._selected_posts[post_id]
+        key = post_key(post)
+        if key in self._selected_posts:
+            del self._selected_posts[key]
         else:
-            self._selected_posts[post_id] = post
-        card = self._preview_cards.get(post_id)
+            self._selected_posts[key] = post
+        card = self._preview_cards.get(key)
         if card is not None:
-            card.set_selected(post_id in self._selected_posts)
+            card.set_selected(key in self._selected_posts)
         if refresh_overlay and self._large_preview_post and \
-                self._large_preview_post.get("id") == post_id:
+                post_key(self._large_preview_post) == key:
             self._overlay_select_btn.setText(
-                "REMOVE FROM SELECTION" if post_id in self._selected_posts
+                "REMOVE FROM SELECTION" if key in self._selected_posts
                 else i18n.tr("ADD TO SELECTION"))
         self._refresh_selection_buttons()
 
@@ -3776,9 +3928,9 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
 
     def select_all_preview_posts(self):
         for post in self._preview_posts:
-            post_id = post.get("id")
-            self._selected_posts[post_id] = post
-            card = self._preview_cards.get(post_id)
+            key = post_key(post)
+            self._selected_posts[key] = post
+            card = self._preview_cards.get(key)
             if card is not None:
                 card.set_selected(True)
         self._refresh_selection_buttons()
@@ -3972,7 +4124,7 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
         self._overlay_select_btn.clicked.connect(
             self.toggle_large_preview_selection)
         iv.addWidget(self._overlay_select_btn)
-        btn_web = HoverButton(i18n.tr("OPEN ON DANBOORU"), radius=8, font=B(10), height=32)
+        btn_web = HoverButton(i18n.tr("OPEN ON SOURCE"), radius=8, font=B(10), height=32)
         btn_web.clicked.connect(self.open_preview_post_in_browser)
         iv.addWidget(btn_web)
         bh.addWidget(info, 2)
@@ -3985,9 +4137,11 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
             self._overlay.setGeometry(self.rect())
 
     def _configure_overlay(self, post):
-        self._overlay_title.setText(f"Post #{post.get('id')}")
+        site_label = post.get("site_name") or "Danbooru"
+        self._overlay_title.setText(
+            f"{site_label} · Post #{post.get('id')}")
         media = post.get("media_asset") or {}
-        size = media.get("file_size")
+        size = media.get("file_size") or post.get("file_size")
         size_str = f"{size / 1024 / 1024:.1f} MB" if size else "—"
         ext = (post.get("file_ext") or "?").upper()
         width = post.get("image_width", 0)
@@ -4012,9 +4166,9 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
                     tags = " ".join(parts[:80]) + " …"
             sections.append(f"{label}:\n{tags}")
         self._overlay_tags.setPlainText("\n\n".join(sections) or "No tags.")
-        post_id = post.get("id")
+        key = post_key(post)
         self._overlay_select_btn.setText(
-            "REMOVE FROM SELECTION" if post_id in self._selected_posts
+            "REMOVE FROM SELECTION" if key in self._selected_posts
             else i18n.tr("ADD TO SELECTION"))
 
     def _close_overlay(self):
@@ -4044,10 +4198,13 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
         self.start_selected_download([self._large_preview_post])
 
     def open_preview_post_in_browser(self):
-        if self._large_preview_post:
-            webbrowser.open(
-                f"https://danbooru.donmai.us/posts/"
-                f"{self._large_preview_post.get('id')}")
+        if not self._large_preview_post:
+            return
+        url = self._large_preview_post.get("page_url")
+        if not url:
+            post_id = self._large_preview_post.get("id")
+            url = f"https://danbooru.donmai.us/posts/{post_id}"
+        webbrowser.open(url)
 
 
     def check_active_tags(self):
@@ -4116,6 +4273,12 @@ class DanbooruDownloaderApp(QtWidgets.QWidget):
         config.API_KEY = self.entry_api_key.text().strip()
         config.REQUEST_TIMEOUT = int(self.slider_timeout.get())
         config.ALLOWED_RATINGS = {"g"}
+        config.SOURCES = {
+            key: switch.isChecked()
+            for key, switch in self.source_switches.items()
+        }
+        config.GELBOORU_API_KEY = self.entry_gelbooru_key.text().strip()
+        config.GELBOORU_USER_ID = self.entry_gelbooru_user.text().strip()
 
     def run_tags_to_triggers(self):
         self.apply_ui_to_downloader_config()

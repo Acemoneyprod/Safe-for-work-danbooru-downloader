@@ -9,7 +9,7 @@
 ![Downloads](https://img.shields.io/github/downloads/Acemoneyprod/Safe-for-work-danbooru-downloader/total?style=for-the-badge&logo=github)
 ![Python](https://img.shields.io/badge/Python-3.9%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![PySide6](https://img.shields.io/badge/PySide6-Qt%206-41CD52?style=for-the-badge&logo=qt&logoColor=white)
-![Strict SFW](https://img.shields.io/badge/Rating-general%20only-success?style=for-the-badge)
+![Strict SFW](https://img.shields.io/badge/Rating-general%20%2F%20safe%20only-success?style=for-the-badge)
 
 </div>
 
@@ -21,17 +21,26 @@
 
 ## Downloading
 
-Search works with Danbooru's usual tag syntax. Tags turn into chips, and
-toasts keep you posted when something needs your attention.
+Search works with Danbooru's usual tag syntax and runs against every enabled
+source at once. Tags turn into chips, and toasts keep you posted when
+something needs your attention.
+
+The keyless sources are Danbooru, Konachan, Yande.re and Sakugabooru. They
+are searched together, results are interleaved, and duplicate images are
+hidden by MD5 (with the file URL as a fallback) across sites and pages.
+Safebooru is available as an optional source, and Gelbooru can be enabled
+after adding an API key and user ID in Settings. Each source has its own
+switch, so you can turn any of them off.
 
 <p align="center">
   <img src="screenshots/01-downloader.png" width="100%" alt="Downloader page">
 </p>
 
 > [!IMPORTANT]
-> **SFW is hard-locked.** `rating:general` gets added to every query, any
-> rating filter you type is ignored, and deleted or banned posts are skipped.
-> There's no switch for this.
+> **SFW is hard-locked.** Each source gets its own safe rating filter
+> (`rating:general` or `rating:safe`), any rating filter you type is ignored,
+> and deleted or banned posts are skipped. The same franchise and NSFW tag
+> blocklists run on every source. There's no switch for this.
 
 <p align="center">
   <img src="screenshots/8-toast.png" width="100%" alt="Toast notification">
@@ -63,10 +72,11 @@ next pages are fetched in the background so paging doesn't feel like waiting.
 </p>
 
 Click a post to see it bigger, along with its score, rating, resolution,
-format, size and tags grouped by category. Tick a few posts to select them,
-select the whole page, clear the selection, or download only what you picked.
-"Use download tags" carries your search over from the downloader tab, and
-there's a link to open the post on Danbooru if you want to see it there.
+format, size and tags grouped by category. Each card has a source badge, and
+the overlay has a link to open the post on the site it came from. Tick a few
+posts to select them, select the whole page, clear the selection, or download
+only what you picked. "Use download tags" carries your search over from the
+downloader tab.
 
 <p align="center">
   <img src="screenshots/03-large-preview.png" width="100%" alt="Large preview">
@@ -113,8 +123,9 @@ immediately, no restart.
 
 You can also change worker count, rate limit and timeout, choose which tag
 categories go into filenames and `.txt` files, and toggle the allowed formats
-(jpg, png, gif, webp, bmp, mp4, webm). Multiple config files are supported if
-you like keeping separate setups.
+(jpg, png, gif, webp, bmp, mp4, webm). The Sources card has a switch for every
+site, plus the Gelbooru API key and user ID fields. Multiple config files are
+supported if you like keeping separate setups.
 
 <p align="center">
   <img src="screenshots/06-settings.png" width="100%" alt="Settings page">
@@ -196,9 +207,10 @@ The startup animation uses `assets/images/welcome.gif` and
 </details>
 
 > [!IMPORTANT]
-> **Strict SFW only.** Every search is hard-locked to `rating:general`.
-> Deleted and banned posts are excluded. That's enforced in the query, the
-> downloader, the preview gallery and the tag inspector.
+> **Strict SFW only.** Every search is hard-locked to the strictest safe
+> rating each source offers (`rating:general` or `rating:safe`). Deleted and
+> banned posts are excluded. That's enforced in the query, the downloader,
+> the preview gallery and the tag inspector.
 
 ## Notes
 

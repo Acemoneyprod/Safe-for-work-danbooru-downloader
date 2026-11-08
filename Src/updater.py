@@ -5,7 +5,7 @@ import tempfile
 
 import requests
 
-APP_VERSION = "1.1.0"
+APP_VERSION = "1.2.0"
 REPO = "Acemoneyprod/Safe-for-work-danbooru-downloader"
 API_URL = "https://api.github.com/repos/%s/releases/latest" % REPO
 RELEASES_URL = "https://github.com/%s/releases/latest" % REPO

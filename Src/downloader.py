@@ -22,6 +22,8 @@ try:
 except ImportError:
     curl_requests = None
 
+import sites
+
 if curl_requests is not None:
     from curl_cffi.requests.errors import RequestsError as CurlRequestsError
     RequestExceptions = (std_requests.RequestException, CurlRequestsError)
@@ -42,7 +44,7 @@ def get_user_agent():
         return f"DanbooruDownloader/1.0 (by {username})"
     return "DanbooruDownloader/1.0"
 
-def http_get(url, params=None, **kwargs):
+def http_get(url, params=None, max_attempts=2, max_retry_delay=30.0, **kwargs):
     headers = kwargs.pop("headers", None) or {}
     if "User-Agent" not in headers:
         headers["User-Agent"] = get_user_agent()
@@ -56,7 +58,7 @@ def http_get(url, params=None, **kwargs):
             response = std_requests.get(url, params=params, **kwargs)
 
         status = getattr(response, "status_code", 0)
-        if status in (429, 500, 502, 503) and attempts < 2:
+        if status in (429, 500, 502, 503) and attempts < max_attempts:
             delay = 2.0 * (attempts + 1)
             try:
                 ra = response.headers.get("Retry-After")
@@ -64,6 +66,7 @@ def http_get(url, params=None, **kwargs):
                     delay = max(delay, float(ra))
             except Exception:
                 pass
+            delay = min(delay, max_retry_delay)
             logging.warning(f"⏳ {status} from server - retrying in {delay:.0f}s "
                             f"({url if len(str(url)) < 80 else '...'})")
             time.sleep(delay)
@@ -210,6 +213,9 @@ def check_tag_details(tag_name):
 class Config:
     USERNAME = ""
     API_KEY = ""
+    SOURCES = dict(sites.DEFAULT_SOURCES)
+    GELBOORU_API_KEY = ""
+    GELBOORU_USER_ID = ""
     
     TAGS = "tag1 tag2"
     LIMIT_PER_PAGE = 200
@@ -372,28 +378,35 @@ def create_save_folder():
     os.makedirs(full_path, exist_ok=True)
     return full_path
 
-def load_progress():
+def load_progress_data():
     if not config.SAVE_PROGRESS or not config.RESUME_DOWNLOAD:
-        return set()
-    
+        return set(), set()
+
     progress_file = os.path.join(config.SAVE_FOLDER, config.PROGRESS_FILE)
     if os.path.exists(progress_file):
         try:
             with open(progress_file, 'r', encoding='utf-8') as f:
                 data = json.load(f)
-                return set(data.get('downloaded_ids', []))
+                return (
+                    set(data.get('downloaded_ids', [])),
+                    set(data.get('downloaded_md5s', [])),
+                )
         except Exception as e:
             logging.warning(f"Could not load progress file: {e}")
-    return set()
+    return set(), set()
 
-def save_progress(downloaded_ids):
+def load_progress():
+    return load_progress_data()[0]
+
+def save_progress(downloaded_ids, downloaded_md5s=None):
     if not config.SAVE_PROGRESS:
         return
-    
+
     progress_file = os.path.join(config.SAVE_FOLDER, config.PROGRESS_FILE)
     try:
         progress_data = {
             'downloaded_ids': list(downloaded_ids),
+            'downloaded_md5s': list(downloaded_md5s or []),
             'last_update': datetime.now().isoformat(),
             'tags': config.TAGS,
             'total_downloaded': len(downloaded_ids)
@@ -416,6 +429,9 @@ def get_post_tags_for_filename(post):
         tags_file_name.extend(post.get("tag_string_artist", "").split())
     if config.INCLUDE_META_TAGS:
         tags_file_name.extend(post.get("tag_string_meta", "").split())
+    
+    if not tags_file_name and post.get("tag_string"):
+        tags_file_name = post.get("tag_string", "").split()
     
     tags_file_name = tags_file_name[:config.MAX_TAGS_IN_FILENAME]
     
@@ -473,14 +489,20 @@ def post_matches_tags(post, required_tags=None, excluded_tags=None, wildcard_tag
 
 def should_download_post(post, downloaded_ids):
     post_id = post['id']
+    progress_key = sites.post_key(post)
     
     hard_reason = hard_block_reason(post)
     if hard_reason:
         logging.info(f"⛔ Skipped post {post_id}: {hard_reason}")
         return False, hard_reason
     
-    if config.RESUME_DOWNLOAD and post_id in downloaded_ids:
-        return False, "already downloaded"
+    if config.RESUME_DOWNLOAD:
+        if progress_key in downloaded_ids:
+            return False, "already downloaded"
+        if (post.get("site") or "danbooru") == "danbooru" and (
+                post_id in downloaded_ids
+                or str(post_id) in downloaded_ids):
+            return False, "already downloaded"
     
     blacklisted_tags = [tag for tag in post.get("tag_string", "").split() if tag in config.BLACKLIST_TAGS]
     if blacklisted_tags:
@@ -507,11 +529,13 @@ def should_download_post(post, downloaded_ids):
         return False, f"ID above maximum: {post_id}"
     
     try:
-        post_date = datetime.fromisoformat(post["created_at"]).replace(tzinfo=None)
-        if config.MIN_DATE and post_date < datetime.fromisoformat(config.MIN_DATE):
-            return False, f"date too early: {post_date}"
-        if config.MAX_DATE and post_date > datetime.fromisoformat(config.MAX_DATE):
-            return False, f"date too late: {post_date}"
+        created_at = post.get("created_at")
+        if created_at:
+            post_date = datetime.fromisoformat(created_at).replace(tzinfo=None)
+            if config.MIN_DATE and post_date < datetime.fromisoformat(config.MIN_DATE):
+                return False, f"date too early: {post_date}"
+            if config.MAX_DATE and post_date > datetime.fromisoformat(config.MAX_DATE):
+                return False, f"date too late: {post_date}"
     except Exception:
         return False, "invalid date format"
     
@@ -584,6 +608,7 @@ def set_file_timestamp(filepath, iso_date_str):
 
 def create_safe_filename(post):
     post_id = post['id']
+    site = post.get("site") or "danbooru"
     
     year_str = ""
     try:
@@ -594,10 +619,12 @@ def create_safe_filename(post):
     
     tags_file_name = get_post_tags_for_filename(post)
     
-    if year_str:
-        filename = f"{post_id}_{year_str}"
+    if site == "danbooru":
+        filename = f"{post_id}_{year_str}" if year_str else f"{post_id}"
     else:
-        filename = f"{post_id}"
+        filename = (
+            f"{site}_{post_id}_{year_str}" if year_str
+            else f"{site}_{post_id}")
     
     for tag in tags_file_name:
         if len(filename) + len(tag) + 1 <= config.MAX_FILENAME_LENGTH:
@@ -691,108 +718,29 @@ def is_tag_limit_error(response):
 
 
 def fetch_posts_for_preview(tags_str, page=1, limit=40, start_raw=None,
-                            max_raw_pages=4):
+                            max_raw_pages=4, session="preview", reset=False):
     tags_str = (tags_str or "").strip()
     if not tags_str:
         return [], "", False, None
 
-    page = max(1, int(page))
+    raw_page = int(start_raw) if start_raw else int(page)
+    raw_page = max(1, raw_page)
     limit = max(1, min(200, int(limit)))
-
-    plain_tags, meta_tokens = split_search_tags(tags_str)
-    required_tags = {tag.lower() for tag in plain_tags}
-    excluded_tags = set(get_excluded_tags(tags_str))
-    wildcard_tags = set(get_wildcard_tags(tags_str))
-
-    fallback_meta = [
-        token for token in meta_tokens
-        if not token.startswith(("-", "~"))
-        and not token.lower().startswith("order:")
-        and "*" not in token
-    ]
-
-    api_tags = tags_str
-    note = ""
-    used_fallback = False
-    fallback_bases = [plain_tags[:2]] if plain_tags else []
-    if len(plain_tags) > 1:
-        fallback_bases.append(plain_tags[:1])
-
-    def _fetch_raw_page(raw_page):
-        nonlocal api_tags, note, used_fallback
-        while True:
-            clean_tags = sanitize_sfw_query(api_tags)
-            if not clean_tags:
-                return []
-            params = {
-                "tags": clean_tags,
-                "limit": limit,
-                "page": raw_page,
-            }
-            if config.USERNAME and config.USERNAME not in ("", "your_danbooru_name"):
-                params["login"] = config.USERNAME
-            if config.API_KEY and config.API_KEY not in ("", "your_danbooru_account_api"):
-                params["api_key"] = config.API_KEY
-
-            response = http_get(API_URL, params=params, timeout=config.REQUEST_TIMEOUT)
-
-            if is_tag_limit_error(response) and fallback_bases:
-                base_tags = fallback_bases.pop(0)
-                api_tags = " ".join(base_tags + fallback_meta)
-                note = f"Danbooru limits searches to 2 tags; showing '{' '.join(base_tags)}' filtered by all tags."
-                used_fallback = True
-                continue
-
-            if getattr(response, "status_code", None) == 410:
-                return []
-
-            response.raise_for_status()
-            return response.json()
-
-    def _keep(post):
-        if hard_block_reason(post):
-            return False
-        post_tags = set(post.get("tag_string", "").split())
-        if config.BLACKLIST_TAGS and (post_tags & config.BLACKLIST_TAGS):
-            return False
-        if post.get("rating") != "g":
-            return False
-        if used_fallback:
-            tags_ok, _ = post_matches_tags(post, required_tags, excluded_tags, wildcard_tags)
-            if not tags_ok:
-                return False
-        return True
-
-    first_raw_page = int(start_raw) if start_raw else (page - 1) * max_raw_pages + 1
-    filtered = []
-    has_more = False
-    fetched = 0
-    while True:
-        cap = max(12 if used_fallback else max_raw_pages, 1)
-        if fetched >= cap or len(filtered) >= limit:
-            break
-        raw_page = first_raw_page + fetched
-        posts = _fetch_raw_page(raw_page)
-        fetched += 1
-        if fetched > 1:
-            time.sleep(0.12)
-        filtered.extend(post for post in posts if _keep(post))
-        has_more = len(posts) >= limit
-        if not has_more:
-            break
-
-    next_raw = (first_raw_page + fetched) if has_more else None
-    return filtered[:limit], note, has_more, next_raw
+    return sites.fetch_combined(
+        tags_str, limit=limit, page=raw_page, session=session,
+        reset=reset or start_raw is None)
 
 
 def download_images():
-    downloaded_ids = load_progress()
+    downloaded_ids, downloaded_md5s = load_progress_data()
     downloaded_formats = defaultdict(int)
     failed_downloads = []
     total_downloaded = len(downloaded_ids)
     
     logging.info(f"Starting download. Already downloaded: {total_downloaded}")
     logging.info(f"Save folder: {config.SAVE_FOLDER}")
+    enabled = sites.enabled_sources()
+    logging.info(f"Sources: {', '.join(sites.site_name(k) for k in enabled)}")
     
     logging.info("Tag configuration:")
     logging.info(f"  - Artist tags: {config.INCLUDE_ARTIST_TAGS}")
@@ -806,17 +754,9 @@ def download_images():
     excluded_tags = set(get_excluded_tags(config.TAGS))
     wildcard_tags = set(get_wildcard_tags(config.TAGS))
 
-    fallback_meta = [
-        token for token in meta_tokens
-        if not token.startswith(("-", "~"))
-        and not token.lower().startswith("order:")
-        and "*" not in token
-    ]
-
-    config.REQUIRED_TAGS = set()
-    config.EXCLUDED_TAGS = set()
-    config.WILDCARD_TAGS = set()
-    api_tags = config.TAGS
+    config.REQUIRED_TAGS = required_tags
+    config.EXCLUDED_TAGS = excluded_tags
+    config.WILDCARD_TAGS = wildcard_tags
     logging.info(f"🔎 Search query: {config.TAGS}")
     if plain_tags:
         logging.info(f"   Required tags: {', '.join(plain_tags)}")
@@ -836,54 +776,22 @@ def download_images():
             logging.info(f"📄 Fetching page {page}...")
             
             try:
-                clean_tags = sanitize_sfw_query(api_tags)
-                if not clean_tags:
-                    logging.error(
-                        "⛔ All search tags are permanently blocked - nothing to download.")
-                    break
-                params = {
-                    "tags": clean_tags,
-                    "limit": config.LIMIT_PER_PAGE,
-                    "page": page,
-                }
-                if config.USERNAME and config.USERNAME not in ("", "your_danbooru_name"):
-                    params["login"] = config.USERNAME
-                if config.API_KEY and config.API_KEY not in ("", "your_danbooru_account_api"):
-                    params["api_key"] = config.API_KEY
-                
-                response = http_get(API_URL, params=params, timeout=config.REQUEST_TIMEOUT)
-
-                fallback_bases = [plain_tags[:2]] if plain_tags else []
-                if len(plain_tags) > 1:
-                    fallback_bases.append(plain_tags[:1])
-
-                while is_tag_limit_error(response) and fallback_bases:
-                    base_tags = fallback_bases.pop(0)
-                    api_tags = " ".join(base_tags + fallback_meta)
-                    config.REQUIRED_TAGS = required_tags
-                    config.EXCLUDED_TAGS = excluded_tags
-                    config.WILDCARD_TAGS = wildcard_tags
-                    logging.warning(
-                        "Danbooru limits this account's searches. Using '%s' for the API "
-                        "query and filtering the full tag set locally.",
-                        api_tags,
-                    )
-                    params["tags"] = sanitize_sfw_query(api_tags)
-                    if not params["tags"]:
-                        break
-                    response = http_get(API_URL, params=params, timeout=config.REQUEST_TIMEOUT)
-
-                response.raise_for_status()
-                posts = response.json()
-                
+                posts, note, has_more, _next_raw = sites.fetch_download_page(
+                    config.TAGS, page, config.LIMIT_PER_PAGE,
+                    reset=(page == config.START_PAGE))
+                if note:
+                    logging.warning(note)
                 if not posts:
+                    if has_more:
+                        page += 1
+                        continue
                     logging.info("✅ No more posts to download.")
                     break
                 
                 for post in posts:
                     if config.CANCELLED:
                         break
-                    if config.MAX_DOWNLOADS is not None and sum(downloaded_formats.values()) >= config.MAX_DOWNLOADS:
+                    if config.MAX_DOWNLOADS is not None and (sum(downloaded_formats.values()) + len(futures)) >= config.MAX_DOWNLOADS:
                         config.CANCELLED = True
                         logging.info(f"🛑 Reached download limit of {config.MAX_DOWNLOADS} files. Stopping.")
                         break
@@ -898,16 +806,18 @@ def download_images():
                     if not image_url:
                         continue
                     
-                    future = executor.submit(process_single_post, post, image_url, downloaded_formats)
-                    futures.append((future, post_id))
+                    future = executor.submit(
+                        process_single_post, post, image_url,
+                        downloaded_formats, downloaded_md5s)
+                    futures.append((future, sites.post_key(post), post_id))
                 
-                for future, post_id in list(futures):
+                for future, progress_key, post_id in list(futures):
                     if future.done():
-                        futures.remove((future, post_id))
+                        futures.remove((future, progress_key, post_id))
                         try:
                             success = future.result()
                             if success:
-                                downloaded_ids.add(post_id)
+                                downloaded_ids.add(progress_key)
                                 total_downloaded += 1
                                 if getattr(config, "ON_PROGRESS_CALLBACK", None):
                                     try:
@@ -924,48 +834,14 @@ def download_images():
 
                 wait_if_paused()
 
+                if not has_more:
+                    break
                 page += 1
                 time.sleep(config.RATE_LIMIT_DELAY)
                 
             except Exception as e:
                 if config.CANCELLED:
                     break
-                status = getattr(getattr(e, "response", None), "status_code", None)
-                if status == 429:
-                    throttle_count = getattr(config, "_throttle_retries", 0) + 1
-                    if throttle_count > 3:
-                        logging.error("❌ Still throttled after retries. Stopping.")
-                        config._throttle_retries = 0
-                        break
-                    config._throttle_retries = throttle_count
-                    retry_after = 2.0 * throttle_count
-                    try:
-                        retry_after = float(e.response.headers.get(
-                            "Retry-After", retry_after))
-                    except Exception:
-                        pass
-                    logging.warning(f"⏳ Throttled (429). Waiting "
-                                    f"{retry_after:.0f}s before retrying page {page}...")
-                    time.sleep(retry_after)
-                    continue
-                if status == 410:
-                    logging.info("📄 Reached the account's pagination limit at "
-                                 f"page {page}. Stopping here.")
-                    break
-                if status in (502, 503):
-                    retry_5xx = getattr(config, "_server_retries", 0) + 1
-                    if retry_5xx > 3:
-                        logging.error(f"❌ Server busy after retries on page {page}. Stopping.")
-                        config._server_retries = 0
-                        break
-                    config._server_retries = retry_5xx
-                    delay = 2 ** retry_5xx
-                    logging.warning(f"🛠️ Server busy ({status}). Retrying page {page} "
-                                    f"in {delay}s...")
-                    time.sleep(delay)
-                    continue
-                config._throttle_retries = 0
-                config._server_retries = 0
                 logging.error(f"❌ Error fetching page {page}: {e}")
                 break
         
@@ -976,12 +852,9 @@ def download_images():
             except Exception:
                 pass
 
-        for future, post_id in futures:
+        for future, progress_key, post_id in futures:
             pending_remaining -= 1
-            if config.MAX_DOWNLOADS is not None and sum(downloaded_formats.values()) >= config.MAX_DOWNLOADS:
-                config.CANCELLED = True
-            if config.CANCELLED:
-                future.cancel()
+            if config.CANCELLED and future.cancel():
                 if getattr(config, "ON_PROGRESS_CALLBACK", None):
                     try:
                         config.ON_PROGRESS_CALLBACK(total_downloaded, total_downloaded + pending_remaining)
@@ -991,10 +864,10 @@ def download_images():
             try:
                 success = future.result(timeout=120)
                 if success:
-                    downloaded_ids.add(post_id)
+                    downloaded_ids.add(progress_key)
                     total_downloaded += 1
                     if total_downloaded % 5 == 0:
-                        save_progress(downloaded_ids)
+                        save_progress(downloaded_ids, downloaded_md5s)
                 if getattr(config, "ON_PROGRESS_CALLBACK", None):
                     try:
                         config.ON_PROGRESS_CALLBACK(total_downloaded, total_downloaded + pending_remaining)
@@ -1004,7 +877,7 @@ def download_images():
                 failed_downloads.append(post_id)
                 logging.error(f"❌ Failed to download post {post_id}: {e}")
     
-    save_progress(downloaded_ids)
+    save_progress(downloaded_ids, downloaded_md5s)
     
     logging.info("=" * 50)
     logging.info("📊 DOWNLOAD SUMMARY")
@@ -1028,7 +901,7 @@ def download_posts(posts, max_workers=None):
     os.makedirs(config.SAVE_FOLDER, exist_ok=True)
     total_target = len(posts)
     downloaded_formats = defaultdict(int)
-    downloaded_ids = load_progress()
+    downloaded_ids, downloaded_md5s = load_progress_data()
     failed_downloads = []
     total_downloaded = 0
 
@@ -1047,24 +920,26 @@ def download_posts(posts, max_workers=None):
                 if config.CANCELLED:
                     break
                 wait_if_paused()
-                if hard_block_reason(post):
-                    logging.info("⛔ Skipped hard-blocked post in selection")
+                if hard_block_reason(post) or post.get("rating") != "g":
+                    logging.info("⛔ Skipped unsafe post in selection")
                     continue
                 post_id = post.get("id")
                 image_url = post.get("file_url")
                 if not image_url:
                     failed_downloads.append(post_id)
                     continue
-                future = executor.submit(process_single_post, post, image_url, downloaded_formats)
-                futures[future] = post_id
+                future = executor.submit(
+                    process_single_post, post, image_url,
+                    downloaded_formats, downloaded_md5s)
+                futures[future] = (sites.post_key(post), post_id)
 
             for future in as_completed(futures):
-                post_id = futures[future]
+                progress_key, post_id = futures[future]
                 try:
                     success = future.result()
                     if success:
                         total_downloaded += 1
-                        downloaded_ids.add(post_id)
+                        downloaded_ids.add(progress_key)
                     else:
                         failed_downloads.append(post_id)
                 except Exception as e:
@@ -1078,11 +953,11 @@ def download_posts(posts, max_workers=None):
                         pass
 
                 if total_downloaded % 5 == 0:
-                    save_progress(downloaded_ids)
+                    save_progress(downloaded_ids, downloaded_md5s)
     finally:
         config.MAX_DOWNLOADS = old_max_downloads
 
-    save_progress(downloaded_ids)
+    save_progress(downloaded_ids, downloaded_md5s)
 
     logging.info("=" * 50)
     logging.info("📊 SELECTED DOWNLOAD SUMMARY")
@@ -1095,24 +970,40 @@ def download_posts(posts, max_workers=None):
     return total_downloaded, failed_downloads
 
 
-def process_single_post(post, image_url, downloaded_formats):
+def process_single_post(post, image_url, downloaded_formats, downloaded_md5s=None):
     if config.MAX_DOWNLOADS is not None and sum(downloaded_formats.values()) >= config.MAX_DOWNLOADS:
         return False
+    downloaded_md5s = downloaded_md5s if downloaded_md5s is not None else set()
     try:
         filename_base = create_safe_filename(post)
         full_path = os.path.join(config.SAVE_FOLDER, filename_base)
+        site = post.get("site") or "danbooru"
+        if site == "danbooru":
+            prefixes = (f"{post['id']}_", f"{post['id']}.")
+        else:
+            prefixes = (f"{site}_{post['id']}_", f"{site}_{post['id']}.")
         
         existing_files = [f for f in os.listdir(config.SAVE_FOLDER) 
-                         if f.startswith(f"{post['id']}_") or f.startswith(f"{post['id']}.")]
+                         if f.startswith(prefixes)]
         if existing_files and config.RESUME_DOWNLOAD:
             logging.info(f"⏩ Skipped existing file: {existing_files[0]}")
             if hasattr(config, "ON_PREVIEW_CALLBACK") and config.ON_PREVIEW_CALLBACK:
                 config.ON_PREVIEW_CALLBACK(os.path.join(config.SAVE_FOLDER, existing_files[0]))
             return True
         
+        known_md5 = (post.get("md5") or "").strip().lower()
+        if known_md5 and known_md5 in downloaded_md5s:
+            logging.info(f"⏩ Skipped duplicate image: {known_md5}")
+            return True
+        
         image_data = download_image_with_retries(image_url)
         if not image_data:
             return False
+        
+        image_md5 = hashlib.md5(image_data).hexdigest()
+        if image_md5 in downloaded_md5s:
+            logging.info(f"⏩ Skipped duplicate image: {image_md5}")
+            return True
         
         file_ext = get_file_extension(image_url)
         
@@ -1121,6 +1012,7 @@ def process_single_post(post, image_url, downloaded_formats):
             with open(filepath, "wb") as f:
                 f.write(image_data)
             downloaded_formats[file_ext] += 1
+            downloaded_md5s.add(image_md5)
             logging.info(f"🎥 Downloaded: {os.path.basename(filepath)}")
             if post.get("created_at"):
                 set_file_timestamp(filepath, post["created_at"])
@@ -1151,6 +1043,7 @@ def process_single_post(post, image_url, downloaded_formats):
                     image.save(filepath, "PNG")
                     
                 downloaded_formats["png"] += 1
+                downloaded_md5s.add(image_md5)
                 logging.info(f"🖼️ Downloaded & Converted to PNG: {os.path.basename(filepath)} ({image.width}x{image.height})")
                 if post.get("created_at"):
                     set_file_timestamp(filepath, post["created_at"])
